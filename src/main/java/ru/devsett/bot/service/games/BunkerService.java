@@ -5,14 +5,18 @@ import com.google.gson.GsonBuilder;
 import lombok.SneakyThrows;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ResourceUtils;
 import ru.devsett.game.bunker.Bunker;
 import ru.devsett.game.bunker.Character;
 import ru.devsett.game.bunker.json.BunkerGameModel;
 import ru.devsett.game.bunker.json.CharacterModel;
 
+import java.io.File;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -116,8 +120,8 @@ public class BunkerService {
     @SneakyThrows
     private BunkerGameModel readBunker() {
         Gson gson = new GsonBuilder().create();
-        var path = Files.readAllLines(resourceLoader.getResource("classpath:bunker.json").getFile().toPath());
-        var strokes = String.join("\n", path);
+        var list = Files.readAllLines(new File(System.getProperty("user.dir") + "/bunker.json").toPath());
+        var strokes = String.join("\n", list);
         return gson.fromJson(strokes, BunkerGameModel.class);
     }
 
