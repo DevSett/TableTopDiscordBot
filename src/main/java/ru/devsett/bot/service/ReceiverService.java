@@ -53,7 +53,7 @@ public class ReceiverService {
     @CommandName(names = {"зр", "зритель", "смотреть", "watch", "watcher"})
     public void watcher(MessageCreateEvent event, String command) {
         discordService.addOrRemoveRole(event, Role.WATCHER);
-        discordService.changeNickName(event, nickName -> !nickName.startsWith("зр.") ? "зр." + nickName : nickName);
+        discordService.changeNickName(event.getMember().get(), nickName -> !nickName.startsWith("зр.") ? "зр." + nickName : nickName);
     }
 
     @CommandName(names = {"ведущий", "вд"})
@@ -61,9 +61,9 @@ public class ReceiverService {
         if (discordService.isPresentRole(event, Role.EXPERT, Role.MASTER)) {
             var action = discordService.addOrRemoveRole(event, Role.MASTER);
             if (action == ActionDo.ADD) {
-                discordService.changeNickName(event, nickName -> !nickName.startsWith(discordConfig.getPrefix()) ?"!" + nickName : nickName);
+                discordService.changeNickName(event.getMember().get(), nickName -> !nickName.startsWith(discordConfig.getPrefix()) ?"!" + nickName : nickName);
             } else if (action == ActionDo.REMOVE) {
-                discordService.changeNickName(event,
+                discordService.changeNickName(event.getMember().get(),
                         nickName -> nickName.startsWith(discordConfig.getPrefix()) ? nickName.replace(discordConfig.getPrefix(), "") : nickName);
             }
         }

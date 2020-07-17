@@ -42,16 +42,17 @@ public class DiscordService {
         }
     }
 
-    public void changeNickName(MessageCreateEvent messageCreateEvent, NickNameEvent nickNameEvent) {
-        var member = messageCreateEvent.getMember().get();
+    public String changeNickName(Member member, NickNameEvent nickNameEvent) {
         var newNickName = nickNameEvent.getName(getNickName(member));
         try {
         member.edit(spec -> spec.setReason("play mafia").setNickname(newNickName)).block();
+        return newNickName;
         } catch (ClientException e) {
           if (e.getStatus() == HttpResponseStatus.FORBIDDEN) {
-              sendPrivateMessage(messageCreateEvent.getMember().get(), "Недостаточно прав для изминения имени на " + newNickName);
+              sendPrivateMessage(member, "Недостаточно прав для изминения имени на " + newNickName);
           }
         }
+        return "";
     }
 
     public Boolean isPresentRole(MessageCreateEvent event, Role... roles) {
@@ -76,8 +77,7 @@ public class DiscordService {
     }
 
     public void randomOrderPlayers(MessageCreateEvent messageCreateEvent, List<Member> channelPlayers) {
-        var members = channelPlayers.stream()
-                .collect(Collectors.toList());
+        var members = channelPlayers.stream().collect(Collectors.toList());
         List<Integer> membersNumbers = new ArrayList<>();
         var random = new SecureRandom();
         for (Member member : members) {
@@ -89,10 +89,12 @@ public class DiscordService {
             int finalNumber = number;
 
             var nickName = getNickName(member);
-            if (nickName.length() > 3 && nickName.toCharArray()[3] == '.' && isOrder(nickName.substring(0, 2))) {
-                changeNickName(messageCreateEvent, name -> name.substring(3));
+            var newNickName = "";
+            if (nickName.length() > 3 && nickName.toCharArray()[2] == '.' && isOrder(nickName.substring(0, 2))) {
+                newNickName = changeNickName(member, name -> name.substring(3));
             }
-            changeNickName(messageCreateEvent, name -> numberString(finalNumber) + name);
+            String finalNewNickName = newNickName;
+            changeNickName(member, name -> numberString(finalNumber) + (finalNewNickName.isEmpty()? name : finalNewNickName));
         }
     }
 
@@ -107,9 +109,9 @@ public class DiscordService {
 
     private String numberString(Integer number) {
         if (number < 10) {
-            return "0" + number + ".";
+            return "0" + number + ". ";
         } else {
-            return number + ".";
+            return number + ". ";
         }
     }
 
