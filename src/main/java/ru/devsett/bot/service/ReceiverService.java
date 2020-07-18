@@ -3,6 +3,7 @@ package ru.devsett.bot.service;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.Message;
+import lombok.Getter;
 import org.springframework.stereotype.Service;
 import ru.devsett.bot.intefaces.CommandName;
 import ru.devsett.bot.service.games.BunkerService;
@@ -22,6 +23,11 @@ public class ReceiverService {
     private final BunkerService bunkerService;
     private final DiscordConfig discordConfig;
     private final MessageService messageService;
+
+    @Getter
+    private MessageCreateEvent telegramSession;
+    @Getter
+    private String tokenTelegramSession;
 
     public ReceiverService(DiscordService discordService, BunkerService bunkerService, DiscordConfig discordConfig, MessageService messageService) {
         this.discordService = discordService;
@@ -52,6 +58,26 @@ public class ReceiverService {
         }
     }
 
+    @CommandName(names = {"телеграм"})
+    public void telegram(MessageCreateEvent event, String command) {
+        if (discordService.isPresentRole(event, Role.MASTER)) {
+            this.tokenTelegramSession = command.split(" ")[1];
+            this.telegramSession = event;
+        }
+    }
+
+    @CommandName(names = {"мут"})
+    public void muteall(MessageCreateEvent event, String command) {
+        if (discordService.isPresentRole(event, Role.MASTER)) {
+           discordService.muteall(event);
+        }
+    }
+    @CommandName(names = {"анмут"})
+    public void unmuteall(MessageCreateEvent event, String command) {
+        if (discordService.isPresentRole(event, Role.MASTER)) {
+            discordService.unmuteall(event);
+        }
+    }
 
     @CommandName(names = {"зр", "зритель", "смотреть", "watch", "watcher"})
     public void watcher(MessageCreateEvent event, String command) {

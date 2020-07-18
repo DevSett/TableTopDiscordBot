@@ -79,8 +79,8 @@ public class DiscordService {
                 .getVoiceState().block()
                 .getChannel().block()
                 .getVoiceStates().map(st -> st.getMember().block())
-                .filter(member -> Arrays.stream(excludeMembers)
-                        .anyMatch(exc -> !getNickName(member).startsWith(exc))
+                .filter(member -> excludeMembers.length > 0 ? Arrays.stream(excludeMembers)
+                        .anyMatch(exc -> !getNickName(member).startsWith(exc)) : true
                 ).collectList().block();
     }
 
@@ -147,5 +147,17 @@ public class DiscordService {
 
     public Member getPlayerByStartsWithNick(List<Member> members, String nick) {
         return members.stream().filter(player -> getNickName(player).startsWith(nick)).findFirst().orElse(null);
+    }
+
+    public void unmuteall(MessageCreateEvent telegramSession) {
+        getChannelPlayers(telegramSession).forEach(player -> {
+                player.edit(pl -> pl.setMute(false)).block();
+        });
+    }
+
+    public void muteall(MessageCreateEvent telegramSession) {
+        getChannelPlayers(telegramSession).forEach(player -> {
+            player.edit(pl -> pl.setMute(true)).block();
+        });
     }
 }
