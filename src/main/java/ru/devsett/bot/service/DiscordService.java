@@ -50,14 +50,14 @@ public class DiscordService {
         }
     }
 
-    public String changeNickName(Member member, NickNameEvent nickNameEvent) {
+    public String changeNickName(MessageCreateEvent event, Member member, NickNameEvent nickNameEvent) {
         var newNickName = nickNameEvent.getName(getNickName(member));
         try {
         member.edit(spec -> spec.setReason("play mafia").setNickname(newNickName)).block();
         return newNickName;
         } catch (ClientException e) {
           if (e.getStatus() == HttpResponseStatus.FORBIDDEN) {
-              sendPrivateMessage(member, "Недостаточно прав для изминения имени на " + newNickName);
+              sendPrivateMessage(event, member, "Недостаточно прав для изминения имени на " + newNickName);
           }
         }
         return "";
@@ -99,10 +99,10 @@ public class DiscordService {
             var nickName = getNickName(member);
             var newNickName = "";
             if (nickName.length() > 3 && nickName.toCharArray()[2] == '.' && isOrder(nickName.substring(0, 2))) {
-                newNickName = changeNickName(member, name -> name.substring(3));
+                newNickName = changeNickName(messageCreateEvent, member, name -> name.substring(3));
             }
             String finalNewNickName = newNickName;
-            changeNickName(member, name -> numberString(finalNumber) + (finalNewNickName.isEmpty()? name : finalNewNickName));
+            changeNickName(messageCreateEvent, member, name -> numberString(finalNumber) + (finalNewNickName.isEmpty()? name : finalNewNickName));
         }
     }
 
@@ -127,9 +127,19 @@ public class DiscordService {
         return member.getNickname().orElse(member.getDisplayName());
     }
 
-    public void sendPrivateMessage(Member member, String msg) {
+    public void sendPrivateMessage(MessageCreateEvent event, Member member, String msg) {
+        try {
         member.getPrivateChannel().block().createMessage(msg).block();
         messageService.sendMessage(member, msg);
+        } catch (ClientException e) {
+            if (e.getStatus() == HttpResponseStatus.FORBIDDEN) {
+                sendChat(event, "Недостаточно прав для отправки сообщения для пользователя " + member.getUsername());
+            }
+        }
+    }
+
+    private void sendChat(MessageCreateEvent event, String s) {
+        event.getMessage().getChannel().block().createMessage(s).block();
     }
 
     public Member getPlayerByStartsWithNick(List<Member> members, String nick) {
