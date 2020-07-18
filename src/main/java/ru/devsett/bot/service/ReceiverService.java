@@ -9,6 +9,7 @@ import ru.devsett.bot.service.games.BunkerService;
 import ru.devsett.bot.util.ActionDo;
 import ru.devsett.bot.util.Role;
 import ru.devsett.config.DiscordConfig;
+import ru.devsett.db.service.MessageService;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
@@ -20,17 +21,19 @@ public class ReceiverService {
     private final DiscordService discordService;
     private final BunkerService bunkerService;
     private final DiscordConfig discordConfig;
+    private final MessageService messageService;
 
-    public ReceiverService(DiscordService discordService, BunkerService bunkerService, DiscordConfig discordConfig) {
+    public ReceiverService(DiscordService discordService, BunkerService bunkerService, DiscordConfig discordConfig, MessageService messageService) {
         this.discordService = discordService;
         this.bunkerService = bunkerService;
         this.discordConfig = discordConfig;
+        this.messageService = messageService;
     }
 
     public void consume(MessageCreateEvent event) {
         Message message = event.getMessage();
         String content = message.getContent();
-        if (content.startsWith(discordConfig.getPrefix()) && content.length() > 2 && event.getMember().isPresent()) {
+        if (content.startsWith(discordConfig.getPrefix()) && content.length() > 2 && event.getMember().isPresent() && !event.getMember().get().isBot()) {
             var command = content.substring(discordConfig.getPrefix().length(), content.contains(" ") ? content.indexOf(" ") : content.length()).trim();
             var findMethod = Arrays.stream(ReceiverService.class.getDeclaredMethods())
                     .filter(method -> method.isAnnotationPresent(CommandName.class)
@@ -61,7 +64,7 @@ public class ReceiverService {
         if (discordService.isPresentRole(event, Role.EXPERT, Role.MASTER)) {
             var action = discordService.addOrRemoveRole(event, Role.MASTER);
             if (action == ActionDo.ADD) {
-                discordService.changeNickName(event.getMember().get(), nickName -> !nickName.startsWith(discordConfig.getPrefix()) ?"!" + nickName : nickName);
+                discordService.changeNickName(event.getMember().get(), nickName -> !nickName.startsWith(discordConfig.getPrefix()) ? "!" + nickName : nickName);
             } else if (action == ActionDo.REMOVE) {
                 discordService.changeNickName(event.getMember().get(),
                         nickName -> nickName.startsWith(discordConfig.getPrefix()) ? nickName.replace(discordConfig.getPrefix(), "") : nickName);
@@ -95,11 +98,7 @@ public class ReceiverService {
             var players = discordService.getChannelPlayers(event, "зр.");
             String[] commands = command.split(" ");
             List<String> items = null;
-            if (commands.length == 1 || commands[1].equals("all")) {
-                items = bunkerService.generateJobs(players.size());
-            } else {
-                items = bunkerService.generateJobs(Integer.parseInt(commands[1]));
-            }
+            items = bunkerService.generateJobs(players.size());
             getCharacterStats(players, commands, ":construction_worker: Новая профессия: ", items);
         }
     }
@@ -110,11 +109,7 @@ public class ReceiverService {
             var players = discordService.getChannelPlayers(event, "зр.");
             String[] commands = command.split(" ");
             List<String> items = null;
-            if (commands.length == 1 || commands[1].equals("all")) {
-                items = bunkerService.generateAdditionalInformation(players.size());
-            } else {
-                items = bunkerService.generateAdditionalInformation(Integer.parseInt(commands[1]));
-            }
+            items = bunkerService.generateAdditionalInformation(players.size());
             getCharacterStats(players, commands, ":rainbow: Новая доп. информация: ", items);
         }
     }
@@ -125,11 +120,7 @@ public class ReceiverService {
             var players = discordService.getChannelPlayers(event, "зр.");
             String[] commands = command.split(" ");
             List<String> items = null;
-            if (commands.length == 1 || commands[1].equals("all")) {
-                items = bunkerService.generateHealths(players.size());
-            } else {
-                items = bunkerService.generateHealths(Integer.parseInt(commands[1]));
-            }
+            items = bunkerService.generateHealths(players.size());
             getCharacterStats(players, commands, ":heart: Новое здоровье: ", items);
         }
     }
@@ -140,11 +131,7 @@ public class ReceiverService {
             var players = discordService.getChannelPlayers(event, "зр.");
             String[] commands = command.split(" ");
             List<String> items = null;
-            if (commands.length == 1 || commands[1].equals("all")) {
-                items = bunkerService.generateBaggage(players.size());
-            } else {
-                items = bunkerService.generateBaggage(Integer.parseInt(commands[1]));
-            }
+            items = bunkerService.generateBaggage(players.size());
             getCharacterStats(players, commands, ":baggage_claim: Новый багаж: ", items);
         }
     }
@@ -155,11 +142,7 @@ public class ReceiverService {
             var players = discordService.getChannelPlayers(event, "зр.");
             String[] commands = command.split(" ");
             List<String> items = null;
-            if (commands.length == 1 || commands[1].equals("all")) {
-                items = bunkerService.generateHumanTraits(players.size());
-            } else {
-                items = bunkerService.generateHumanTraits(Integer.parseInt(commands[1]));
-            }
+            items = bunkerService.generateHumanTraits(players.size());
             getCharacterStats(players, commands, ":face_with_monocle: Новая черта характера: ", items);
         }
     }
@@ -170,11 +153,7 @@ public class ReceiverService {
             var players = discordService.getChannelPlayers(event, "зр.");
             String[] commands = command.split(" ");
             List<String> items = null;
-            if (commands.length == 1 || commands[1].equals("all")) {
-                items = bunkerService.generateHobbes(players.size());
-            } else {
-                items = bunkerService.generateHobbes(Integer.parseInt(commands[1]));
-            }
+            items = bunkerService.generateHobbes(players.size());
             getCharacterStats(players, commands, ":diving_mask: Новое хобби: ", items);
         }
     }
@@ -185,11 +164,7 @@ public class ReceiverService {
             var players = discordService.getChannelPlayers(event, "зр.");
             String[] commands = command.split(" ");
             List<String> items = null;
-            if (commands.length == 1 || commands[1].equals("all")) {
-               items = bunkerService.generateMaleAngAgs(players.size());
-            } else {
-                items = bunkerService.generateHobbes(Integer.parseInt(commands[1]));
-            }
+            items = bunkerService.generateMaleAngAgs(players.size());
             getCharacterStats(players, commands, ":bust_in_silhouette: Новый персонаж: ", items);
         }
     }
@@ -216,18 +191,26 @@ public class ReceiverService {
         }
     }
 
+    @CommandName(names = {"грязь"})
+    public void getMessages(MessageCreateEvent event, String command) {
+        var nick = command.split(" ");
+        if (discordService.isPresentRole(event, Role.MASTER) && nick.length>1) {
+           var name = nick[1];
+           discordService.sendPrivateMessage(event.getMember().get(), messageService.getAllMessages(name));
+        }
+    }
+
     private void getCharacterStats(List<Member> players, String[] commands, String msg, List<String> items) {
         if (commands.length == 1 || commands[1].equals("all")) {
             for (int i = 0; i < items.size(); i++) {
                 discordService.sendPrivateMessage(players.get(i), msg + items.get(i));
             }
         } else {
-            String[] playersSend = commands[2].split(",");
+            String[] playersSend = commands[1].split(",");
             for (int i = 0; i < playersSend.length; i++) {
-                discordService.sendPrivateMessage(players.get(Integer.parseInt(playersSend[i]) - 1), msg + items.get(i));
+                discordService.sendPrivateMessage(discordService.getPlayerByStartsWithNick(players, playersSend[i]), msg + items.get(i));
             }
         }
     }
-
 
 }

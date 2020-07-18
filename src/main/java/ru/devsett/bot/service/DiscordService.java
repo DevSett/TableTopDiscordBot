@@ -4,10 +4,12 @@ import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Member;
 import discord4j.rest.http.client.ClientException;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.devsett.bot.intefaces.NickNameEvent;
 import ru.devsett.bot.util.ActionDo;
 import ru.devsett.bot.util.Role;
+import ru.devsett.db.service.MessageService;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -17,6 +19,12 @@ import java.util.stream.Collectors;
 
 @Service
 public class DiscordService {
+
+    private final MessageService messageService;
+
+    public DiscordService(MessageService messageService) {
+        this.messageService = messageService;
+    }
 
     public ActionDo addOrRemoveRole(MessageCreateEvent event, Role role) {
         var guild = event.getGuild();
@@ -121,5 +129,10 @@ public class DiscordService {
 
     public void sendPrivateMessage(Member member, String msg) {
         member.getPrivateChannel().block().createMessage(msg).block();
+        messageService.sendMessage(member, msg);
+    }
+
+    public Member getPlayerByStartsWithNick(List<Member> members, String nick) {
+        return members.stream().filter(player -> getNickName(player).startsWith(nick)).findFirst().orElse(null);
     }
 }
