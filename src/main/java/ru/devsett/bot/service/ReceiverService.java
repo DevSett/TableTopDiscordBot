@@ -194,9 +194,9 @@ public class ReceiverService {
     @CommandName(names = {"грязь"})
     public void getMessages(MessageCreateEvent event, String command) {
         var nick = command.split(" ");
-        if (discordService.isPresentRole(event, Role.MASTER) && nick.length>1) {
-           var name = nick[1];
-           discordService.sendPrivateMessage(event, event.getMember().get(), messageService.getAllMessages(name));
+        if (discordService.isPresentRole(event, Role.MASTER) && nick.length > 1) {
+            var name = nick[1];
+            discordService.sendPrivateMessage(event, event.getMember().get(), messageService.getAllMessages(name));
         }
     }
 

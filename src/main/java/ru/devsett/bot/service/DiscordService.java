@@ -53,12 +53,12 @@ public class DiscordService {
     public String changeNickName(MessageCreateEvent event, Member member, NickNameEvent nickNameEvent) {
         var newNickName = nickNameEvent.getName(getNickName(member));
         try {
-        member.edit(spec -> spec.setReason("play mafia").setNickname(newNickName)).block();
-        return newNickName;
+            member.edit(spec -> spec.setReason("play mafia").setNickname(newNickName)).block();
+            return newNickName;
         } catch (ClientException e) {
-          if (e.getStatus() == HttpResponseStatus.FORBIDDEN) {
-              sendPrivateMessage(event, member, "Недостаточно прав для изминения имени на " + newNickName);
-          }
+            if (e.getStatus() == HttpResponseStatus.FORBIDDEN) {
+                sendPrivateMessage(event, member, "Недостаточно прав для изминения имени на " + newNickName);
+            }
         }
         return "";
     }
@@ -102,7 +102,7 @@ public class DiscordService {
                 newNickName = changeNickName(messageCreateEvent, member, name -> name.substring(3));
             }
             String finalNewNickName = newNickName;
-            changeNickName(messageCreateEvent, member, name -> numberString(finalNumber) + (finalNewNickName.isEmpty()? name : finalNewNickName));
+            changeNickName(messageCreateEvent, member, name -> numberString(finalNumber) + (finalNewNickName.isEmpty() ? name : finalNewNickName));
         }
     }
 
@@ -129,8 +129,11 @@ public class DiscordService {
 
     public void sendPrivateMessage(MessageCreateEvent event, Member member, String msg) {
         try {
-        member.getPrivateChannel().block().createMessage(msg).block();
-        messageService.sendMessage(member, msg);
+            if (msg.length() > 1999) {
+                msg = msg.substring(msg.length() - 1999);
+            }
+            member.getPrivateChannel().block().createMessage(msg).block();
+            messageService.sendMessage(member, msg);
         } catch (ClientException e) {
             if (e.getStatus() == HttpResponseStatus.FORBIDDEN) {
                 sendChat(event, "Недостаточно прав для отправки сообщения для пользователя " + member.getUsername());
