@@ -141,7 +141,7 @@ public class DiscordService {
         }
     }
 
-    private void sendChat(MessageCreateEvent event, String s) {
+    public void sendChat(MessageCreateEvent event, String s) {
         event.getMessage().getChannel().block().createMessage(s).block();
     }
 
@@ -159,5 +159,9 @@ public class DiscordService {
         getChannelPlayers(telegramSession).forEach(player -> {
             player.edit(pl -> pl.setMute(true)).block();
         });
+    }
+
+    public void sendChatEmbed(MessageCreateEvent event, String msgHelp, String url) {
+        event.getMessage().getChannel().block().createEmbed(emd -> emd.setTitle("Команды").setDescription(msgHelp).setUrl(url)).block();
     }
 }
