@@ -1,15 +1,12 @@
 package ru.devsett.db.service;
 
 import discord4j.core.object.entity.Member;
-import org.hibernate.internal.util.ZonedDateTimeComparator;
 import org.springframework.stereotype.Service;
 import ru.devsett.db.dto.MessageEntity;
 import ru.devsett.db.repository.MessageRepository;
 
 import java.sql.Date;
 import java.text.SimpleDateFormat;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.stream.Collectors;
 
 @Service
@@ -33,11 +30,11 @@ public class MessageService {
     public MessageEntity newMessage(Member member, String msg, boolean isSend) {
         var user = userService.findById(member.getId().asLong());
         if (user == null) {
-            user = userService.newUser(member);
+            user = userService.getOrNewUser(member);
         }
         var message = new MessageEntity();
         message.setMessage(msg);
-        message.setIsSend(isSend? '1' : '0');
+        message.setSend(isSend);
         message.setUserEntity(user);
         message.setDateMessage(new Date(System.currentTimeMillis()));
         return messageRepository.save(message);

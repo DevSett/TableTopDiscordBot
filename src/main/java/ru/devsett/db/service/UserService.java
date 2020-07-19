@@ -2,6 +2,7 @@ package ru.devsett.db.service;
 
 import discord4j.core.object.entity.Member;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.devsett.db.dto.UserEntity;
 import ru.devsett.db.repository.UserRepository;
 
@@ -13,9 +14,13 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    public UserEntity newUser(Member member) {
-        var user = new UserEntity();
-        user.setId(member.getId().asLong());
+
+    public UserEntity getOrNewUser(Member member) {
+        var user = findByUserName(member.getUsername());
+        if (user == null) {
+            user = new UserEntity();
+            user.setId(member.getId().asLong());
+        }
         user.setUserName(member.getUsername());
         user.setNickName(member.getNickname().orElse(member.getDisplayName()));
         return userRepository.save(user);
@@ -31,5 +36,10 @@ public class UserService {
 
     public UserEntity findByUserName(String nick) {
         return userRepository.findOneByUserName(nick).orElse(null);
+    }
+
+    public void addRating(UserEntity user, Integer plus) {
+        user.setRating(user.getRating() + plus);
+        userRepository.save(user);
     }
 }

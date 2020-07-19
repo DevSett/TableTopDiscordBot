@@ -20,14 +20,14 @@ import java.util.List;
 @Log4j2
 public class TelegramService extends TelegramLongPollingBot {
     private final TelegramConfig telegramConfig;
-    private final ReceiverService receiverService;
+    private final MessageReceiverService messageReceiverService;
     private final DiscordService discordService;
 
     private Long currentIdSession = 0l;
 
-    public TelegramService(TelegramConfig telegramConfig, ReceiverService receiverService, DiscordService discordService) {
+    public TelegramService(TelegramConfig telegramConfig, MessageReceiverService messageReceiverService, DiscordService discordService) {
         this.telegramConfig = telegramConfig;
-        this.receiverService = receiverService;
+        this.messageReceiverService = messageReceiverService;
         this.discordService = discordService;
     }
 
@@ -38,17 +38,17 @@ public class TelegramService extends TelegramLongPollingBot {
             message = update.getCallbackQuery().getMessage();
         }
 
-        if (receiverService.getTokenTelegramSession() != null && receiverService.getTokenTelegramSession().equals(message.getText())) {
+        if (messageReceiverService.getTokenTelegramSession() != null && messageReceiverService.getTokenTelegramSession().equals(message.getText())) {
             currentIdSession = message.getChatId();
             sendMessage(message.getChatId(), "Команды доступны!", keyboardCommands(TelegramCommand.allValues(), 1, false));
         }
 
         if (message.getChatId().equals(currentIdSession)) {
             if (message.getText().equals(TelegramCommand.MUTE_ALL.getMsg())) {
-                discordService.muteall(receiverService.getTelegramSession());
+                discordService.muteall(messageReceiverService.getTelegramSession());
             }
             if (message.getText().equals(TelegramCommand.UNMUTE_ALL.getMsg())) {
-                discordService.unmuteall(receiverService.getTelegramSession());
+                discordService.unmuteall(messageReceiverService.getTelegramSession());
             }
         }
     }

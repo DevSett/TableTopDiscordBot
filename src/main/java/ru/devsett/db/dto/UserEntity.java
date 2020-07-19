@@ -19,7 +19,9 @@ public class UserEntity {
     @Getter(onMethod_ = {@Basic, @Column(name = "NICKNAME")})
     private String nickName;
     @Getter(onMethod_ = {@Basic, @Column(name = "COIN")})
-    private Long coin;
+    private Long coin = 0l;
+    @Getter(onMethod_ = {@Basic, @Column(name = "RATING")})
+    private Long rating = 0l;
     @Getter(onMethod_ = {@OneToMany(fetch = FetchType.LAZY, mappedBy = "userEntity")})
     private Collection<MessageEntity> messageEntityByUSER;
 

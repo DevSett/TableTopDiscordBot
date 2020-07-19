@@ -4,7 +4,6 @@ import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Member;
 import discord4j.rest.http.client.ClientException;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.devsett.bot.intefaces.NickNameEvent;
 import ru.devsett.bot.util.ActionDo;
@@ -151,7 +150,7 @@ public class DiscordService {
 
     public void unmuteall(MessageCreateEvent telegramSession) {
         getChannelPlayers(telegramSession).forEach(player -> {
-                player.edit(pl -> pl.setMute(false)).block();
+            player.edit(pl -> pl.setMute(false)).block();
         });
     }
 
@@ -161,7 +160,12 @@ public class DiscordService {
         });
     }
 
-    public void sendChatEmbed(MessageCreateEvent event, String msgHelp, String url) {
-        event.getMessage().getChannel().block().createEmbed(emd -> emd.setTitle("Команды").setDescription(msgHelp).setUrl(url)).block();
+    public void sendChatEmbed(MessageCreateEvent event, String title, String msgHelp, String url) {
+        event.getMessage().getChannel().block().createEmbed(emd -> {
+            emd.setTitle(title).setDescription(msgHelp);
+            if (url != null) {
+                 emd.setUrl(url);
+            }
+        }).block();
     }
 }

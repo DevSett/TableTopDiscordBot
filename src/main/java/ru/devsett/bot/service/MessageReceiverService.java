@@ -4,6 +4,7 @@ import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.Message;
 import lombok.Getter;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import ru.devsett.bot.intefaces.CommandName;
 import ru.devsett.bot.service.games.BunkerService;
@@ -11,87 +12,100 @@ import ru.devsett.bot.util.ActionDo;
 import ru.devsett.bot.util.Role;
 import ru.devsett.config.DiscordConfig;
 import ru.devsett.db.service.MessageService;
+import ru.devsett.db.service.UserService;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.List;
 
 @Service
-public class ReceiverService {
+@Log4j2
+public class MessageReceiverService {
 
     private final DiscordService discordService;
     private final BunkerService bunkerService;
     private final DiscordConfig discordConfig;
     private final MessageService messageService;
+    private final UserService userService;
 
     @Getter
     private MessageCreateEvent telegramSession;
     @Getter
     private String tokenTelegramSession;
 
-    public ReceiverService(DiscordService discordService, BunkerService bunkerService, DiscordConfig discordConfig, MessageService messageService) {
+    public MessageReceiverService(DiscordService discordService, BunkerService bunkerService, DiscordConfig discordConfig, MessageService messageService, UserService userService) {
         this.discordService = discordService;
         this.bunkerService = bunkerService;
         this.discordConfig = discordConfig;
         this.messageService = messageService;
+        this.userService = userService;
     }
 
     public void consume(MessageCreateEvent event) {
         Message message = event.getMessage();
         String content = message.getContent();
-        if (content.startsWith(discordConfig.getPrefix()) && content.length() > 2 && event.getMember().isPresent() && !event.getMember().get().isBot()) {
-            var command = content.substring(discordConfig.getPrefix().length(), content.contains(" ") ? content.indexOf(" ") : content.length()).trim();
-            var findMethod = Arrays.stream(ReceiverService.class.getDeclaredMethods())
-                    .filter(method -> method.isAnnotationPresent(CommandName.class)
-                            && Arrays.asList(method.getDeclaredAnnotation(CommandName.class).names()).contains(command))
-                    .findFirst();
-            findMethod.ifPresent(method -> {
-                method.setAccessible(true);
-                try {
-                    method.invoke(this, event, content.substring(discordConfig.getPrefix().length()));
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
-                } catch (InvocationTargetException e) {
-                    e.printStackTrace();
-                }
-            });
+        if (content.startsWith(discordConfig.getPrefix())
+                && content.length() > 2
+                && event.getMember().isPresent()
+                && !event.getMember().get().isBot()) {
+            reflectInvoke(event, content);
         }
     }
+
 
     @CommandName(names = {"хелп"})
     public void help(MessageCreateEvent event, String command) {
         var msgHelp =
                 "зр - выдать/забрать роль зрителя с перфиксом \"зр.\"\n" +
-                "вд - выдать/забрать роль ведущего с префиксом ! (только для ведущего и опытного)\n" +
-                "Только для ведущего:\n" +
-                "мут - мут всех в канале\n" +
-                "анмут - размут всех в канале\n" +
-                "ордер - выдать номера всем игрокам в комнате кроме роли зр.\n" +
-                "бункер - начать игру бункер (выдача всем в лс их персонажей и состояния бункера с катастрофой)\n" +
-                "проф - выдача всем новых профессий\n" +
-                "проф %Начала ника игроков через запятую% - выдать профессии определенным игрокам\n" +
-                "доп - выдача всем новых доп. информаций\n" +
-                "доп %Начала ника игроков через запятую% - выдать доп. инфу определенным игрокам\n" +
-                "зд - выдача всем новых состояний здоровья \n" +
-                "зд %Начала ника игроков через запятую% - выдать здоровье определенным игрокам\n" +
-                "багаж- выдача всем новых багажей\n" +
-                "багаж %Начала ника игроков через запятую% - выдать багажа определенным игрокам\n" +
-                "телеграм %Любой токен% - токен для синхронизации с телеграмом\n" +
-                "черта- выдача всем новых черт\n" +
-                "черта %Начала ника игроков через запятую% - выдать черту определенным игрокам\n" +
-                "хобби- выдача всем новых  хобби \n" +
-                "хобби %Начала ника игроков через запятую% - выдать определенным игрокам хобби \n" +
-                "персонаж- выдача всем новых персонажей\n" +
-                "персонаж %Начала ника игроков через запятую% - выдать персонажа определенным игрокам\n" +
-                "новый-бункер - выдача всем нового бункера\n" +
-                "катастрофа - выдача всем новой катастрофы\n" +
-                "грязь %ЮзерНейм игрока% - выдаст всю историю сообщений с игроком у бота (последние 2000 символов)\n" +
-                "телеграм %Любой номер% - токен для синхронизации с телеграмом\n" +
-                "\nMADE BY KillSett" ;
+                        "вд - выдать/забрать роль ведущего с префиксом ! (только для ведущего и опытного)\n" +
+                        "Только для ведущего:\n" +
+                        "мут - мут всех в канале\n" +
+                        "анмут - размут всех в канале\n" +
+                        "ордер - выдать номера всем игрокам в комнате кроме роли зр.\n" +
+                        "бункер - начать игру бункер (выдача всем в лс их персонажей и состояния бункера с катастрофой)\n" +
+                        "проф - выдача всем новых профессий\n" +
+                        "проф %Начала ника игроков через запятую% - выдать профессии определенным игрокам\n" +
+                        "доп - выдача всем новых доп. информаций\n" +
+                        "доп %Начала ника игроков через запятую% - выдать доп. инфу определенным игрокам\n" +
+                        "зд - выдача всем новых состояний здоровья \n" +
+                        "зд %Начала ника игроков через запятую% - выдать здоровье определенным игрокам\n" +
+                        "багаж- выдача всем новых багажей\n" +
+                        "багаж %Начала ника игроков через запятую% - выдать багажа определенным игрокам\n" +
+                        "телеграм %Любой токен% - токен для синхронизации с телеграмом\n" +
+                        "черта- выдача всем новых черт\n" +
+                        "черта %Начала ника игроков через запятую% - выдать черту определенным игрокам\n" +
+                        "хобби- выдача всем новых  хобби \n" +
+                        "хобби %Начала ника игроков через запятую% - выдать определенным игрокам хобби \n" +
+                        "персонаж- выдача всем новых персонажей\n" +
+                        "персонаж %Начала ника игроков через запятую% - выдать персонажа определенным игрокам\n" +
+                        "новый-бункер - выдача всем нового бункера\n" +
+                        "катастрофа - выдача всем новой катастрофы\n" +
+                        "грязь %ЮзерНейм игрока% - выдаст всю историю сообщений с игроком у бота (последние 2000 символов)\n" +
+                        "телеграм %Любой номер% - токен для синхронизации с телеграмом\n" +
+                        "рейтинг - показывает ваш рейтинг\n" +
+                        "рейтинг %ЮзерНейм% - показывает рейтинг игрока\n" +
+                        "\nMADE BY KillSett";
 
-        discordService.sendChatEmbed(event, msgHelp, "https://github.com/DevSett/TableTopDiscordBot");
+        discordService.sendChatEmbed(event, "Команды", msgHelp, "https://github.com/DevSett/TableTopDiscordBot");
     }
-        @CommandName(names = {"телеграм"})
+
+    @CommandName(names = {"рейтинг"})
+    public void raite(MessageCreateEvent event, String command) {
+        var spl = command.split(" ");
+        if (spl.length == 1) {
+            discordService.sendChatEmbed(event, "Ваш рейтинг",
+                    userService.getOrNewUser(event.getMember().get()).getRating() + "", null);
+        } else {
+            var user = userService.findByUserName(spl[1]);
+            if (user == null) {
+                discordService.sendChat(event, "Пользователь не найден!");
+            } else {
+                discordService.sendChatEmbed(event, "Рейтинг " + spl[1], user.getRating() + "" , null);
+            }
+        }
+    }
+
+
+    @CommandName(names = {"телеграм"})
     public void telegram(MessageCreateEvent event, String command) {
         if (discordService.isPresentRole(event, Role.MASTER)) {
             this.tokenTelegramSession = command.split(" ")[1];
@@ -102,9 +116,10 @@ public class ReceiverService {
     @CommandName(names = {"мут"})
     public void muteall(MessageCreateEvent event, String command) {
         if (discordService.isPresentRole(event, Role.MASTER)) {
-           discordService.muteall(event);
+            discordService.muteall(event);
         }
     }
+
     @CommandName(names = {"анмут"})
     public void unmuteall(MessageCreateEvent event, String command) {
         if (discordService.isPresentRole(event, Role.MASTER)) {
@@ -272,4 +287,20 @@ public class ReceiverService {
         }
     }
 
+    private void reflectInvoke(MessageCreateEvent event, String content) {
+        var command = content.substring(discordConfig.getPrefix().length(), content.contains(" ") ? content.indexOf(" ") : content.length()).trim();
+        var findMethod = Arrays.stream(MessageReceiverService.class.getDeclaredMethods())
+                .filter(method -> method.isAnnotationPresent(CommandName.class)
+                        && Arrays.asList(method.getDeclaredAnnotation(CommandName.class).names()).contains(command))
+                .findFirst();
+        findMethod.ifPresent(method -> {
+            method.setAccessible(true);
+            try {
+                method.invoke(this, event, content.substring(discordConfig.getPrefix().length()));
+            } catch (Exception e) {
+                log.error(e);
+                e.printStackTrace();
+            }
+        });
+    }
 }
