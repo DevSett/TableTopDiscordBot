@@ -1,4 +1,4 @@
-package ru.devsett.bot.service;
+package ru.devsett.bot.service.receiver;
 
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
@@ -10,6 +10,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import ru.devsett.bot.service.DiscordService;
 import ru.devsett.bot.util.TelegramCommand;
 import ru.devsett.config.TelegramConfig;
 
@@ -20,15 +21,15 @@ import java.util.List;
 @Log4j2
 public class TelegramService extends TelegramLongPollingBot {
     private final TelegramConfig telegramConfig;
-    private final MessageReceiverService messageReceiverService;
     private final DiscordService discordService;
+    private final MasterReceiverService masterReceiverService;
 
     private Long currentIdSession = 0l;
 
-    public TelegramService(TelegramConfig telegramConfig, MessageReceiverService messageReceiverService, DiscordService discordService) {
+    public TelegramService(TelegramConfig telegramConfig, DiscordService discordService, MasterReceiverService masterReceiverService) {
         this.telegramConfig = telegramConfig;
-        this.messageReceiverService = messageReceiverService;
         this.discordService = discordService;
+        this.masterReceiverService = masterReceiverService;
     }
 
     @Override
@@ -38,17 +39,17 @@ public class TelegramService extends TelegramLongPollingBot {
             message = update.getCallbackQuery().getMessage();
         }
 
-        if (messageReceiverService.getTokenTelegramSession() != null && messageReceiverService.getTokenTelegramSession().equals(message.getText())) {
+        if (masterReceiverService.getTokenTelegramSession() != null && masterReceiverService.getTokenTelegramSession().equals(message.getText())) {
             currentIdSession = message.getChatId();
             sendMessage(message.getChatId(), "Команды доступны!", keyboardCommands(TelegramCommand.allValues(), 1, false));
         }
 
         if (message.getChatId().equals(currentIdSession)) {
             if (message.getText().equals(TelegramCommand.MUTE_ALL.getMsg())) {
-                discordService.muteall(messageReceiverService.getTelegramSession());
+                discordService.muteall(masterReceiverService.getTelegramMember().getVoiceState().block().getChannel().block());
             }
             if (message.getText().equals(TelegramCommand.UNMUTE_ALL.getMsg())) {
-                discordService.unmuteall(messageReceiverService.getTelegramSession());
+                discordService.unmuteall(masterReceiverService.getTelegramMember().getVoiceState().block().getChannel().block());
             }
         }
     }

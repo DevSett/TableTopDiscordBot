@@ -28,10 +28,7 @@ public class MessageService {
     }
 
     public MessageEntity newMessage(Member member, String msg, boolean isSend) {
-        var user = userService.findById(member.getId().asLong());
-        if (user == null) {
-            user = userService.getOrNewUser(member);
-        }
+        var user = userService.getOrNewUser(member);
         var message = new MessageEntity();
         message.setMessage(msg);
         message.setSend(isSend);

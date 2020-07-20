@@ -31,17 +31,17 @@ public class RangService {
         var channelEntity = channelService.getOrNewChannel(channel.getName(), channel.getId().asLong(), true);
         var watchman = watchmanService.exit(channelEntity, user, System.currentTimeMillis());
 
+        if (watchman != null) {
+            var timeSec = (watchman.getExitTime().getTime() - watchman.getJoinTime().getTime()) / 1000;
+            var raite = (timeSec * 0.004);
+            if (raite >= 1) {
+                userService.addRating(user, raite > 116 ? 116 : (int) raite);
+            }
+        }
+
         var channelNew = current.getChannel().block();
         if (channelNew != null) {
             join(current);
-        }
-
-        if (watchman != null) {
-            var timeSec = (watchman.getExitTime().getTime() - watchman.getJoinTime().getTime()) / 1000;
-            var raite = (timeSec * 0.0006);
-            if (raite >= 1) {
-                userService.addRating(user, raite > 52 ? 52 : (int) raite);
-            }
         }
     }
 }

@@ -6,6 +6,11 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.devsett.db.dto.UserEntity;
 import ru.devsett.db.repository.UserRepository;
 
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 public class UserService {
     private final UserRepository userRepository;
@@ -16,7 +21,10 @@ public class UserService {
 
 
     public UserEntity getOrNewUser(Member member) {
-        var user = findByUserName(member.getUsername());
+        var user = findById(member.getId().asLong());
+        if (user == null) {
+            user = findByUserName(member.getUsername());
+        }
         if (user == null) {
             user = new UserEntity();
             user.setId(member.getId().asLong());
@@ -40,6 +48,31 @@ public class UserService {
 
     public void addRating(UserEntity user, Integer plus) {
         user.setRating(user.getRating() + plus);
+        userRepository.save(user);
+    }
+
+    public List<UserEntity> getUsersForUnBan() {
+        var users = userRepository.findAllByDateBanIsNotNull();
+        if (users.size() == 0) {
+            return users;
+        }
+
+        return users.stream().filter(user -> (user.getDateBan() != null && user.getDateBan().before(new Date())))
+                .collect(Collectors.toList());
+    }
+
+    public void ban(Member member, int hours) {
+        Calendar cal = Calendar.getInstance(); // creates calendar
+        cal.setTime(new Date()); // sets calendar time/date
+        cal.add(Calendar.HOUR_OF_DAY, hours); // adds one hour
+
+        var user = getOrNewUser(member);
+        user.setDateBan(new java.sql.Date(cal.getTime().getTime()));
+        userRepository.save(user);
+    }
+
+    public void unban(UserEntity user) {
+        user.setDateBan(null);
         userRepository.save(user);
     }
 }

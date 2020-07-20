@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.sql.Date;
 import java.util.Collection;
 import java.util.Objects;
 
@@ -24,6 +25,8 @@ public class UserEntity {
     private Long rating = 0l;
     @Getter(onMethod_ = {@OneToMany(fetch = FetchType.LAZY, mappedBy = "userEntity")})
     private Collection<MessageEntity> messageEntityByUSER;
+    @Getter(onMethod_ = {@Basic, @Column(name = "DATE_BAN")})
+    private Date dateBan;
 
     @Override
     public boolean equals(Object o) {

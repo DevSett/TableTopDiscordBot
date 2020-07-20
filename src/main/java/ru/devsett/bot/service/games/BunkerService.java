@@ -71,6 +71,11 @@ public class BunkerService {
                 .collect(Collectors.toList());
     }
 
+    public List<String> generatePhobia(int size) {
+        var bunkerGameModel = readBunker();
+        return randomList(bunkerGameModel.getCharacter().getPhobias(), size);
+    }
+
     public List<String> generateMaleAngAgs(int size) {
         var bunkerGameModel = readBunker();
         List<String> list = new ArrayList<>();
@@ -214,4 +219,6 @@ public class BunkerService {
     private int random(int min, int bound) {
         return Math.max(min, new SecureRandom().nextInt(bound));
     }
+
+
 }

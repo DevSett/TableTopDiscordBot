@@ -1,12 +1,15 @@
-package ru.devsett.bot.service;
+package ru.devsett.bot.service.receiver;
 
 import discord4j.core.event.domain.VoiceStateUpdateEvent;
+import discord4j.rest.http.client.ClientException;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.devsett.bot.service.games.RangService;
-import ru.devsett.db.service.WatchmanService;
 
 @Service
+@Log4j2
 public class VoiceReceiverService {
 
     @Autowired
@@ -23,7 +26,13 @@ public class VoiceReceiverService {
     }
 
     private void join(VoiceStateUpdateEvent event) {
+        try {
         rangService.join(event.getCurrent());
+        } catch (ClientException e) {
+            if (e.getStatus() == HttpResponseStatus.FORBIDDEN) {
+
+            }
+        }
     }
 
     private void swap(VoiceStateUpdateEvent event) {
