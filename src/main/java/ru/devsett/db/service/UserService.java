@@ -46,9 +46,9 @@ public class UserService {
         return userRepository.findOneByUserName(nick).orElse(null);
     }
 
-    public void addRating(UserEntity user, Integer plus) {
+    public UserEntity addRating(UserEntity user, Integer plus) {
         user.setRating(user.getRating() + plus);
-        userRepository.save(user);
+        return userRepository.save(user);
     }
 
     public List<UserEntity> getUsersForUnBan() {

@@ -5,6 +5,7 @@ import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.channel.VoiceChannel;
 import discord4j.rest.http.client.ClientException;
+import discord4j.rest.util.Permission;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import org.springframework.stereotype.Service;
 import ru.devsett.bot.intefaces.NickNameEvent;
@@ -75,8 +76,19 @@ public class DiscordService {
         }
         return event.getMember().get()
                 .getRoles()
-                .any(roleDiscord -> Arrays.stream(roles).anyMatch(role -> role.getName().equals(roleDiscord.getName())))
+                .any(roleDiscord -> Arrays.stream(roles).anyMatch(role -> role.getName().equals(roleDiscord.getName()) ))
                 .block();
+    }
+
+    public Boolean isPresentPermission(MessageCreateEvent event, Role role, Permission... permissions) {
+        if (permissions.length == 0) {
+            return true;
+        }
+
+        return event.getMember().get()
+                .getRoles()
+                .filter(roleDiscord ->  role.getName().equals(roleDiscord.getName()))
+                .blockFirst().getPermissions().contains(permissions);
     }
 
     public List<Member> getChannelPlayers(MessageCreateEvent event,

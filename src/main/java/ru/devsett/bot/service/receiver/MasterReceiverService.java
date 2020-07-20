@@ -3,6 +3,7 @@ package ru.devsett.bot.service.receiver;
 import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Member;
+import discord4j.rest.util.Permission;
 import lombok.Getter;
 import org.springframework.stereotype.Service;
 import ru.devsett.bot.MafiaBot;
@@ -85,7 +86,8 @@ public class MasterReceiverService {
             msgHelp += "\n\nДЛЯ МОДЕРАТОРОВ:\n"
                     + "фастбан %Начала никнейма который сидит в вашем войсе% %Причина% %Кол-во часов%\n"
                     + "бан %юзернейм% %Причина% %Кол-во часов%\n"
-                    + "анбан %юзернейм%\n";
+                    + "анбан %юзернейм%\n"
+                    + "адд-рейтинг %юзернейм% %кол-во%";
         }
 
         discordService.sendChatEmbed(event, "Команды", msgHelp, "https://github.com/DevSett/TableTopDiscordBot");
@@ -95,7 +97,7 @@ public class MasterReceiverService {
     public void fastban(MessageCreateEvent event, String command) {
         var spl = command.split(" ");
 
-        if (discordService.isPresentRole(event, Role.MODERATOR)) {
+        if (discordService.isPresentRole(event, Role.MODERATOR) && discordService.isPresentPermission(event, Role.MODERATOR, Permission.BAN_MEMBERS)) {
             if (spl.length == 3) {
                 discordService.fastban(event, spl[1], spl[2], 720);
             }
@@ -115,7 +117,7 @@ public class MasterReceiverService {
     public void ban(MessageCreateEvent event, String command) {
         var spl = command.split(" ");
 
-        if (discordService.isPresentRole(event, Role.MODERATOR)) {
+        if (discordService.isPresentRole(event, Role.MODERATOR) && discordService.isPresentPermission(event, Role.MODERATOR, Permission.BAN_MEMBERS)) {
             if (spl.length == 3) {
                 discordService.ban(event, spl[1], spl[2], 720);
             }
@@ -135,7 +137,7 @@ public class MasterReceiverService {
     public void unban(MessageCreateEvent event, String command) {
         var spl = command.split(" ");
 
-        if (discordService.isPresentRole(event, Role.MODERATOR)) {
+        if (discordService.isPresentRole(event, Role.MODERATOR) && discordService.isPresentPermission(event, Role.MODERATOR, Permission.BAN_MEMBERS)) {
             if (spl.length == 2) {
                 discordService.unban(event, spl[1]);
             }
@@ -158,6 +160,36 @@ public class MasterReceiverService {
         }
     }
 
+    @CommandName(names = {"адд-рейтинг"})
+    public void addRaite(MessageCreateEvent event, String command) {
+        if (!discordService.isPresentRole(event, Role.MODERATOR)) {
+            return;
+        }
+        var spl = command.split(" ");
+        if (spl.length == 2) {
+            Integer number = 0;
+            try {
+                number = Integer.valueOf(spl[1]);
+            } catch (Exception e) {
+                throw new DiscordException("Введите кол-во рейтинга!");
+            }
+            discordService.sendChatEmbed(event, "Ваш рейтинг",
+                    userService.addRating(userService.getOrNewUser(event.getMember().get()),number).getRating() + "", null);
+        } else {
+            var user = userService.findByUserName(spl[1]);
+            if (user == null) {
+                discordService.sendChat(event, "Пользователь не найден!");
+            } else {
+                Integer number = 0;
+                try {
+                    number = Integer.valueOf(spl[2]);
+                } catch (Exception e) {
+                    throw new DiscordException("Введите кол-во рейтинга!");
+                }
+                discordService.sendChatEmbed(event, "Рейтинг " + spl[1], userService.addRating(user, number).getRating() + "", null);
+            }
+        }
+    }
 
     @CommandName(names = {"телеграм"})
     public void telegram(MessageCreateEvent event, String command) {

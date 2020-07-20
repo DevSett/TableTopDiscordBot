@@ -42,4 +42,5 @@ public class UserEntity {
     public int hashCode() {
         return Objects.hash(id, userName, nickName);
     }
+
 }
