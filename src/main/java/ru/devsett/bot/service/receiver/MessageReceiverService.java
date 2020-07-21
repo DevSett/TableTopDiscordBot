@@ -2,6 +2,7 @@ package ru.devsett.bot.service.receiver;
 
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Message;
+import discord4j.core.object.entity.channel.TextChannel;
 import discord4j.rest.http.client.ClientException;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import lombok.extern.log4j.Log4j2;
@@ -12,6 +13,8 @@ import ru.devsett.bot.util.DiscordException;
 import ru.devsett.config.DiscordConfig;
 
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -74,6 +77,20 @@ public class MessageReceiverService {
             if (e.getTargetException() instanceof DiscordException) {
                 DiscordException discordException = (DiscordException) e.getTargetException();
                 discordService.sendChat(event, discordException.getMessage());
+            }
+            if (e.getTargetException() instanceof NullPointerException) {
+                discordService.sendChat(event, "Недостаточно прав!");
+                var channel = event.getGuild().block().getChannels().filter(chan -> chan.getName().equals("log")).blockFirst();
+                if (channel instanceof TextChannel) {
+                    StringWriter sw = new StringWriter();
+                    PrintWriter pw = new PrintWriter(sw);
+                    e.getTargetException().printStackTrace(pw);
+                    pw.flush();
+
+                    ((TextChannel) channel).createEmbed(spec -> spec.setTitle("NullPointerException")
+                            .setDescription(sw.toString()))
+                            .block();
+                }
             }
             log.error(e);
         } catch (IllegalAccessException e) {

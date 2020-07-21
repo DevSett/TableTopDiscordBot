@@ -27,6 +27,8 @@ public class UserEntity {
     private Collection<MessageEntity> messageEntityByUSER;
     @Getter(onMethod_ = {@Basic, @Column(name = "DATE_BAN")})
     private Date dateBan;
+    @Getter(onMethod_ = {@ManyToOne(fetch = FetchType.LAZY), @JoinColumn(name = "WHO_BAN", referencedColumnName = "ID")})
+    private UserEntity whoBan;
 
     @Override
     public boolean equals(Object o) {

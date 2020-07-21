@@ -61,18 +61,20 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
-    public void ban(Member member, int hours) {
+    public void ban(Member member, Member whoBan, int hours) {
         Calendar cal = Calendar.getInstance(); // creates calendar
         cal.setTime(new Date()); // sets calendar time/date
         cal.add(Calendar.HOUR_OF_DAY, hours); // adds one hour
 
         var user = getOrNewUser(member);
+        user.setWhoBan(getOrNewUser(whoBan));
         user.setDateBan(new java.sql.Date(cal.getTime().getTime()));
         userRepository.save(user);
     }
 
     public void unban(UserEntity user) {
         user.setDateBan(null);
+        user.setWhoBan(null);
         userRepository.save(user);
     }
 

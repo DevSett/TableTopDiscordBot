@@ -2,11 +2,13 @@ package ru.devsett.bot.service;
 
 import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.message.MessageCreateEvent;
+import discord4j.core.object.entity.Guild;
 import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.channel.VoiceChannel;
 import discord4j.rest.http.client.ClientException;
 import discord4j.rest.util.Permission;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import org.checkerframework.checker.nullness.Opt;
 import org.springframework.stereotype.Service;
 import ru.devsett.bot.intefaces.NickNameEvent;
 import ru.devsett.bot.util.ActionDo;
@@ -19,6 +21,7 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,10 +37,14 @@ public class DiscordService {
     }
 
     public ActionDo addOrRemoveRole(MessageCreateEvent event, Role role) {
-        var guild = event.getGuild();
-        var member = event.getMember().get();
+        return addOrRemoveRole(event.getGuild().block(), event.getMember(), role);
+    }
+    public ActionDo addOrRemoveRole(Guild guild, Optional<Member> member, Role role) {
+        if (!member.isPresent()) {
+            return ActionDo.NOTHING;
+        }
 
-        var findedRole = guild.block().getRoles()
+        var findedRole = guild.getRoles()
                 .filter(roleDiscord -> roleDiscord.getName().equals(role.getName()))
                 .blockFirst();
 
@@ -45,14 +52,14 @@ public class DiscordService {
             return ActionDo.NOTHING;
         }
 
-        var isPresentRole = member.getRoles()
+        var isPresentRole = member.get().getRoles()
                 .any(roleDiscord -> findedRole.getId().equals(roleDiscord.getId()))
                 .block();
         if (isPresentRole) {
-            member.removeRole(findedRole.getId()).block();
+            member.get().removeRole(findedRole.getId()).block();
             return ActionDo.REMOVE;
         } else {
-            member.addRole(findedRole.getId()).block();
+            member.get().addRole(findedRole.getId()).block();
             return ActionDo.ADD;
         }
     }
@@ -88,7 +95,7 @@ public class DiscordService {
         return event.getMember().get()
                 .getRoles()
                 .filter(roleDiscord ->  role.getName().equals(roleDiscord.getName()))
-                .blockFirst().getPermissions().contains(permissions);
+                .blockFirst().getPermissions().stream().anyMatch(perm -> Arrays.asList(permissions).contains(perm));
     }
 
     public List<Member> getChannelPlayers(MessageCreateEvent event,
@@ -105,15 +112,19 @@ public class DiscordService {
     }
 
     public VoiceChannel getChannel(MessageCreateEvent event) {
-        var channel = event.getMember().get()
-                .getVoiceState().block()
-                .getChannel().block();
+        try {
+            var channel = event.getMember().get()
+                    .getVoiceState().block()
+                    .getChannel().block();
 
-        if (channel == null) {
+            if (channel == null) {
+                throw new NullPointerException();
+            }
+
+            return channel;
+        } catch (NullPointerException e ) {
             throw new DiscordException("Войс канал не найден или недостаточно прав!");
         }
-
-        return channel;
     }
 
     public void randomOrderPlayers(MessageCreateEvent messageCreateEvent, List<Member> channelPlayers) {
@@ -221,29 +232,60 @@ public class DiscordService {
         if (findedMember == null) {
             throw new DiscordException("Пользователь не найден!");
         } else {
-            userService.ban(findedMember, hours);
+            userService.ban(findedMember, event.getMember().get(), hours);
             var days = Math.min(7, hours / 24);
             findedMember.ban(spec -> spec.setReason(reason).setDeleteMessageDays(days)).block();
             sendChat(event, "Выдан бан!");
         }
     }
 
+    public void hideban(MessageCreateEvent event, String userName, int hours) {
+        var findedMember = event.getGuild().block().getMembers().filter(member -> member.getUsername().equals(userName)).blockFirst();
+        if (findedMember == null) {
+            throw new DiscordException("Пользователь не найден!");
+        } else {
+            userService.ban(findedMember, event.getMember().get(), hours);
+            addOrRemoveRole(event.getGuild().block(), Optional.ofNullable(findedMember), Role.BAN);
+            sendChat(event, "Выдан бан!");
+        }
+    }
+
     public void fastban(MessageCreateEvent event, String name, String reason, int hours) {
         var member = getPlayerByStartsWithNick(getChannelPlayers(event), name);
-        userService.ban(member, hours);
+        userService.ban(member, event.getMember().get(), hours);
         var days = Math.min(7, hours / 24);
         member.ban(spec -> spec.setReason(reason).setDeleteMessageDays(days <= 1 ? 1 : days)).block();
+    }
+
+    public void hidefastban(MessageCreateEvent event, String name, int hours) {
+        var member = getPlayerByStartsWithNick(getChannelPlayers(event), name);
+        userService.ban(member, event.getMember().get(), hours);
+        addOrRemoveRole(event.getGuild().block(), Optional.ofNullable(member), Role.BAN);
     }
 
     public void unban(MessageCreateEvent event, String userName) {
         var findedMember = event.getGuild().block().getBans().filter(
                 ban -> ban.getUser().getUsername().equals(userName)).blockFirst();
-        if (findedMember == null) {
+
+        var user = userService.findByUserName(userName);
+        Member member = null;
+        if (user != null) {
+            member = event.getGuild().block().getMemberById(Snowflake.of(user.getId())).block();
+        }
+        if (findedMember == null && member == null) {
             throw new DiscordException("Пользователь не найден!");
         } else {
-            userService.unban(userService.findById(findedMember.getUser().getId().asLong()));
-            event.getGuild().block().unban(Snowflake.of(findedMember.getUser().getId().asLong())).block();
+            if (findedMember != null) {
+                userService.unban(userService.findById(findedMember.getUser().getId().asLong()));
+                addOrRemoveRole(event.getGuild().block(),
+                        Optional.ofNullable(findedMember.getUser().asMember(event.getGuildId().get()).block()), Role.BAN);
+                event.getGuild().block().unban(Snowflake.of(findedMember.getUser().getId().asLong())).block();
+            } else {
+                userService.unban(userService.findById(member.getId().asLong()));
+                addOrRemoveRole(event.getGuild().block(), Optional.ofNullable(member), Role.BAN);
+            }
             sendChat(event, "Выпущен из клетки!");
+
         }
     }
 }

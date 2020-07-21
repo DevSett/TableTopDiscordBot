@@ -5,6 +5,7 @@ import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Member;
 import discord4j.rest.util.Permission;
 import lombok.Getter;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import ru.devsett.bot.MafiaBot;
 import ru.devsett.bot.intefaces.CommandName;
@@ -14,11 +15,13 @@ import ru.devsett.bot.util.Role;
 import ru.devsett.db.service.MessageService;
 import ru.devsett.db.service.UserService;
 
+import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 @Service
+@Log4j2
 public class MasterReceiverService {
     private final MessageService messageService;
     private final UserService userService;
@@ -49,7 +52,7 @@ public class MasterReceiverService {
     public void help(MessageCreateEvent event, String command) {
         var msgHelp =
                 "топ - показать топ рейтинга\n" +
-                "зр - выдать/забрать роль зрителя с перфиксом \"Зр.\"\n" +
+                        "зр - выдать/забрать роль зрителя с перфиксом \"Зр.\"\n" +
                         "вд - выдать/забрать роль ведущего без префикса ! (только для ведущего и опытного)\n" +
                         "Только для ведущего:\n" +
                         "мут - мут всех в канале\n" +
@@ -88,10 +91,53 @@ public class MasterReceiverService {
                     + "фастбан %Начала никнейма который сидит в вашем войсе% %Причина% %Кол-во часов%\n"
                     + "бан %юзернейм% %Причина% %Кол-во часов%\n"
                     + "анбан %юзернейм%\n"
-                    + "адд-рейтинг %юзернейм% %кол-во%";
+                    + "адд-рейтинг %юзернейм% %кол-во%\n"
+                    + "хайдбан %юзернейм% %кол-в часово%\n"
+                    + "хайдфастбан %Начала никнейма который сидит в вашем войсе% %Причина% %Кол-во часов%";
         }
 
         discordService.sendChatEmbed(event, "Команды", msgHelp, "https://github.com/DevSett/TableTopDiscordBot");
+    }
+
+    @CommandName(names = {"хайдбан"})
+    public void hideban(MessageCreateEvent event, String command) {
+        var spl = command.split(" ");
+
+        if (discordService.isPresentRole(event, Role.MODERATOR) && discordService.isPresentPermission(event, Role.MODERATOR, Permission.BAN_MEMBERS)) {
+            if (spl.length == 2) {
+                discordService.hideban(event, spl[1], 720);
+            }
+            if (spl.length == 3) {
+                Integer number = -1;
+                try {
+                    number = Integer.valueOf(spl[2]);
+                } catch (Exception e) {
+                    throw new DiscordException("Введите кол-во часов!");
+                }
+                discordService.hideban(event, spl[1], number);
+            }
+        }
+    }
+
+    @CommandName(names = {"хайдфастбан"})
+    public void hidefastban(MessageCreateEvent event, String command) {
+        var spl = command.split(" ");
+
+        if (discordService.isPresentRole(event, Role.MODERATOR) && discordService.isPresentPermission(event, Role.MODERATOR, Permission.BAN_MEMBERS)) {
+            if (spl.length == 2) {
+                discordService.hidefastban(event, spl[1], 720);
+            }
+
+            if (spl.length == 3) {
+                Integer number = -1;
+                try {
+                    number = Integer.valueOf(spl[2]);
+                } catch (Exception e) {
+                    throw new DiscordException("Введите кол-во часов!");
+                }
+                discordService.hidefastban(event, spl[1], number);
+            }
+        }
     }
 
     @CommandName(names = {"фастбан"})
@@ -244,8 +290,19 @@ public class MasterReceiverService {
         ScheduledExecutorService ses = Executors.newSingleThreadScheduledExecutor();
         ses.scheduleAtFixedRate(() -> {
             userService.getUsersForUnBan().forEach(user -> {
-                MafiaBot.getGuild().unban(Snowflake.of(user.getId())).block();
-                userService.unban(user);
+                try {
+                    MafiaBot.getGuild().unban(Snowflake.of(user.getId())).block();
+                    try {
+                        discordService.addOrRemoveRole(MafiaBot.getGuild(),
+                                Optional.ofNullable(MafiaBot.getGuild().getMemberById(Snowflake.of(user.getId())).block()),
+                                Role.BAN);
+                    } catch (Exception e) {
+                        log.error(e);
+                    }
+                    userService.unban(user);
+                } catch (Exception e) {
+                    log.error(e);
+                }
             });
         }, 0, 15, TimeUnit.SECONDS);
     }

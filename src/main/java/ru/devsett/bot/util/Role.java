@@ -5,7 +5,8 @@ public enum  Role {
     PLAYER("Мафия"),
     MASTER("Ведущий"),
     MODERATOR("Модератор"),
-    EXPERT("Опытный");
+    EXPERT("Опытный"),
+    BAN("Бан");
 
     private String name;
 
