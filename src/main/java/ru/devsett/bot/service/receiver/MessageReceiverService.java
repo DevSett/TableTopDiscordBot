@@ -73,6 +73,18 @@ public class MessageReceiverService {
                 if (clientException.getStatus() == HttpResponseStatus.FORBIDDEN) {
                     discordService.sendChat(event, "Недостаточно прав!");
                 }
+                if (clientException.getStatus() == HttpResponseStatus.BAD_REQUEST) {
+                    discordService.sendChat(event, "Ошибка выполнения!");
+                }
+
+                var channel = event.getGuild().block().getChannels().filter(chan -> chan.getName().equals("log"))
+                        .blockFirst();
+                if (channel instanceof TextChannel) {
+
+                    ((TextChannel) channel).createEmbed(spec -> spec.setTitle("Client Exception")
+                            .setDescription(clientException.getMessage()))
+                            .block();
+                }
             }
             if (e.getTargetException() instanceof DiscordException) {
                 DiscordException discordException = (DiscordException) e.getTargetException();

@@ -86,17 +86,18 @@ public class MasterReceiverService {
 
                         "\nMADE BY KillSett";
 
+
+
+        discordService.sendChatEmbed(event, "Команды", msgHelp, "https://github.com/DevSett/TableTopDiscordBot");
         if (discordService.isPresentRole(event, Role.MODERATOR)) {
-            msgHelp += "\n\nДЛЯ МОДЕРАТОРОВ:\n"
-                    + "фастбан %Начала никнейма который сидит в вашем войсе% %Причина% %Кол-во часов%\n"
+            var  msgHelp2  = "фастбан %Начала никнейма который сидит в вашем войсе% %Причина% %Кол-во часов%\n"
                     + "бан %юзернейм% %Причина% %Кол-во часов%\n"
                     + "анбан %юзернейм%\n"
                     + "адд-рейтинг %юзернейм% %кол-во%\n"
                     + "хайдбан %юзернейм% %кол-в часово%\n"
                     + "хайдфастбан %Начала никнейма который сидит в вашем войсе% %Причина% %Кол-во часов%";
+            discordService.sendChatEmbed(event, "ДЛЯ МОДЕРАТОРОВ", msgHelp2, "https://github.com/DevSett/TableTopDiscordBot");
         }
-
-        discordService.sendChatEmbed(event, "Команды", msgHelp, "https://github.com/DevSett/TableTopDiscordBot");
     }
 
     @CommandName(names = {"хайдбан"})
