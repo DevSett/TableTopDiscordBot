@@ -14,4 +14,6 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
     <S extends UserEntity> Optional<S> findOneByNickName(String displayName);
     <S extends UserEntity> Optional<S> findOneByUserName(String displayName);
     <S extends UserEntity> List<UserEntity> findAllByDateBanIsNotNull();
+    <S extends UserEntity> List<UserEntity> findAllByOrderByRatingDesc();
+
 }

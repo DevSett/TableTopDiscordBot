@@ -48,6 +48,7 @@ public class MasterReceiverService {
     @CommandName(names = {"хелп"})
     public void help(MessageCreateEvent event, String command) {
         var msgHelp =
+                "топ - показать топ рейтинга\n" +
                 "зр - выдать/забрать роль зрителя с перфиксом \"Зр.\"\n" +
                         "вд - выдать/забрать роль ведущего без префикса ! (только для ведущего и опытного)\n" +
                         "Только для ведущего:\n" +
@@ -160,6 +161,12 @@ public class MasterReceiverService {
         }
     }
 
+    @CommandName(names = {"топ"})
+    public void top(MessageCreateEvent event, String command) {
+        discordService.sendChatEmbed(event, "10 лучших игроков",
+                userService.getTop(), null);
+    }
+
     @CommandName(names = {"адд-рейтинг"})
     public void addRaite(MessageCreateEvent event, String command) {
         if (!discordService.isPresentRole(event, Role.MODERATOR)) {
@@ -174,7 +181,7 @@ public class MasterReceiverService {
                 throw new DiscordException("Введите кол-во рейтинга!");
             }
             discordService.sendChatEmbed(event, "Ваш рейтинг",
-                    userService.addRating(userService.getOrNewUser(event.getMember().get()),number).getRating() + "", null);
+                    userService.addRating(userService.getOrNewUser(event.getMember().get()), number).getRating() + "", null);
         } else {
             var user = userService.findByUserName(spl[1]);
             if (user == null) {

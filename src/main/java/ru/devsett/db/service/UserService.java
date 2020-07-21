@@ -2,13 +2,13 @@ package ru.devsett.db.service;
 
 import discord4j.core.object.entity.Member;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import ru.devsett.db.dto.UserEntity;
 import ru.devsett.db.repository.UserRepository;
 
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @Service
@@ -74,5 +74,12 @@ public class UserService {
     public void unban(UserEntity user) {
         user.setDateBan(null);
         userRepository.save(user);
+    }
+
+    public String getTop() {
+        var users = userRepository.findAllByOrderByRatingDesc();
+        AtomicInteger index = new AtomicInteger(1);
+        return users.subList(0, 10).stream().map(user -> index.getAndIncrement() + ". " + user.getUserName() + " - " + user.getRating())
+                .collect(Collectors.joining("\n"));
     }
 }
