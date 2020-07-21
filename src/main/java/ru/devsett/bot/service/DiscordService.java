@@ -8,7 +8,6 @@ import discord4j.core.object.entity.channel.VoiceChannel;
 import discord4j.rest.http.client.ClientException;
 import discord4j.rest.util.Permission;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import org.checkerframework.checker.nullness.Opt;
 import org.springframework.stereotype.Service;
 import ru.devsett.bot.intefaces.NickNameEvent;
 import ru.devsett.bot.util.ActionDo;
