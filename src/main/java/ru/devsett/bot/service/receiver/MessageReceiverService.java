@@ -49,23 +49,31 @@ public class MessageReceiverService {
             reflectInvoke(event, content);
         }
 
-        if (event.getMember().isPresent() && event.getMember().get().isBot() && event.getMember().get().getDisplayName().equals("Server Monitoring")) {
-            if (event.getMessage().getEmbeds().size() > 0) {
-                var emb = event.getMessage().getEmbeds().get(0);
-                if (emb.getDescription().isPresent()) {
-                    var desc = emb.getDescription().get();
-                    if (desc.contains("Server bumped by") && desc.contains("<") && desc.contains(">")) {
-                        var user = userService.findById(Long.parseLong(desc.substring(desc.indexOf("<"), desc.indexOf(">"))));
-                        if (user != null) {
-                            userService.addRating(user, 100);
+        try {
+            if (event.getMember().isPresent() && event.getMember().get().isBot() && event.getMember().get().getDisplayName().equals("Server Monitoring")) {
+                if (event.getMessage().getEmbeds().size() > 0) {
+                    var emb = event.getMessage().getEmbeds().get(0);
+                    if (emb.getDescription().isPresent()) {
+                        var desc = emb.getDescription().get();
+                        if (desc.contains("Server bumped by") && desc.contains("<") && desc.contains(">")) {
+                            var user = userService.findById(Long.parseLong(desc.substring(desc.indexOf("<") + 3, desc.indexOf(">"))));
+                            if (user != null) {
+                                userService.addRating(user, 100);
+                            }
                         }
                     }
                 }
+            } else {
+                if (event.getMember().isPresent() && !event.getMember().get().isBot() && content.equals("!bump")) {
+                    userService.getOrNewUser(event.getMember().get());
+                }
             }
-        } else {
-            if (event.getMember().isPresent() && !event.getMember().get().isBot() && content.equals("!bump")) {
-                userService.getOrNewUser(event.getMember().get());
-            }
+        } catch (Exception e) {
+            var channel = event.getGuild().block().getChannels().filter(chan -> chan.getName().equals("log")).blockFirst();
+            String finalMsg = e.getMessage();
+            ((TextChannel) channel).createEmbed(spec -> spec.setTitle("Exception")
+                    .setDescription(finalMsg))
+                    .block();
         }
     }
 

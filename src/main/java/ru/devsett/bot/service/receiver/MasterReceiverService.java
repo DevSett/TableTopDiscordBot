@@ -85,7 +85,7 @@ public class MasterReceiverService {
                         "рейтинг - показывает ваш рейтинг\n" +
                         "рейтинг %ЮзерНейм% - показывает рейтинг игрока\n" +
 
-                        "\nMADE BY KillSett v 0.18";
+                        "\nMADE BY KillSett v 0.19";
 
 
 
