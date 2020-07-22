@@ -4,6 +4,7 @@ import discord4j.core.object.VoiceState;
 import discord4j.core.object.entity.channel.TextChannel;
 import org.springframework.stereotype.Service;
 import ru.devsett.bot.MafiaBot;
+import ru.devsett.bot.util.DiscordException;
 import ru.devsett.db.service.ChannelService;
 import ru.devsett.db.service.UserService;
 import ru.devsett.db.service.WatchmanService;
@@ -31,14 +32,24 @@ public class RangService {
     }
 
     public void exit(VoiceState current, VoiceState old) {
+
+
         var member = current.getMember().block();
         if (member == null) {
             member = old.getMember().block();
         }
+
+
+
         var user = userService.getOrNewUser(member);
         var channel = old.getChannel().block();
         var channelEntity = channelService.getOrNewChannel(channel.getName(), channel.getId().asLong(), true);
         var watchman = watchmanService.exit(channelEntity, user, System.currentTimeMillis());
+
+        var channelNew = current.getChannel().block();
+        if (channelNew != null) {
+            join(current);
+        }
 
         if (watchman != null) {
             var timeSec = (watchman.getExitTime().getTime() - watchman.getJoinTime().getTime()) / 1000;
@@ -54,16 +65,15 @@ public class RangService {
                     ru.devsett.db.dto.UserEntity finalUser = user;
                     int finalRaite = (int) raite;
                     ((TextChannel) textChannel).createEmbed(spec -> spec.setTitle("Рейтинг")
-                            .setDescription("Для игрока " + finalUser.getUserName() + " начислено " + finalRaite + " рейтинга!"  )
-                            .setFooter("Рейтинг: " + (finalUser.getRating()  + finalRaite), null))
+                            .setDescription("Для игрока " + finalUser.getUserName() + " начислено " + finalRaite + " рейтинга!")
+                            .setFooter("Рейтинг: " + (finalUser.getRating() + finalRaite), null))
                             .block();
                 }
             }
+        } else {
+            throw new DiscordException("WATCHMAN EXIT не найден");
         }
 
-        var channelNew = current.getChannel().block();
-        if (channelNew != null) {
-            join(current);
-        }
+
     }
 }

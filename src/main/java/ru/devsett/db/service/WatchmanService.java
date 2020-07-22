@@ -29,7 +29,7 @@ public class WatchmanService {
     public WatchmanEntity exit(ChannelEntity channelEntity, UserEntity user, long sysmilsExit) {
         var watchman = watchmanRepository.findAllByUserEntityAndJoinTimeNotNullAndExitTimeIsNull(user);
         if (watchman.isEmpty()) {
-            throw  new DiscordException("WATCHMAN EXIT не найден");
+            return null;
         }
         var watchmanGet = watchman.stream().filter(watchmanEntity -> watchmanEntity.getChannelEntity() != null &&
                 watchmanEntity.getId() == channelEntity.getId())
