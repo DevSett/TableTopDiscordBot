@@ -39,6 +39,7 @@ public class VoiceReceiverService {
     }
 
     private void printException(VoiceStateUpdateEvent event, Exception e) {
+        try {
         var channel = MafiaBot.getGuild().getChannels().filter(chan -> chan.getName().equals("log"))
                 .blockFirst();
         if (channel instanceof TextChannel) {
@@ -51,7 +52,10 @@ public class VoiceReceiverService {
                     .setFooter("Юзер: " + name + ", Канал: " + currentName, null))
                     .block();
         }
-        log.error(e);
+            log.error(e);
+        }catch (Exception e2) {
+            log.error(e2);
+        }
     }
 
     private void join(VoiceStateUpdateEvent event) {
