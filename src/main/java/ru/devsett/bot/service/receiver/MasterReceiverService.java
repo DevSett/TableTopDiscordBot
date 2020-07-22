@@ -85,7 +85,7 @@ public class MasterReceiverService {
                         "рейтинг - показывает ваш рейтинг\n" +
                         "рейтинг %ЮзерНейм% - показывает рейтинг игрока\n" +
 
-                        "\nMADE BY KillSett v 0.19";
+                        "\nMADE BY KillSett v 0.20";
 
 
 
@@ -236,7 +236,7 @@ public class MasterReceiverService {
                 ru.devsett.db.dto.UserEntity finalUser = user;
                 int finalRaite = (int) number;
                 ((TextChannel) textChannel).createEmbed(spec -> spec.setTitle("Рейтинг")
-                        .setDescription("Для игрока " + finalUser.getUserName() + " начислено " + finalRaite + " рейтинга!"  )
+                        .setDescription("Для игрока " + finalUser.getUserName() + " начислено " + finalRaite + " рейтинга от " +event.getMember().get().getUsername() +" !" )
                         .setFooter("Рейтинг: " + (userService.findById(finalUser.getId()).getRating()), null))
                         .block();
             }
@@ -261,7 +261,7 @@ public class MasterReceiverService {
                     ru.devsett.db.dto.UserEntity finalUser = user;
                     int finalRaite = (int) number;
                     ((TextChannel) textChannel).createEmbed(spec -> spec.setTitle("Рейтинг")
-                            .setDescription("Для игрока " + finalUser.getUserName() + " начислено " + finalRaite + " рейтинга!"  )
+                            .setDescription("Для игрока " + finalUser.getUserName() + " начислено " + finalRaite + " рейтинга от " +event.getMember().get().getUsername() +" !"  )
                             .setFooter("Рейтинг: " + (userService.findById(finalUser.getId()).getRating()), null))
                             .block();
                 }
