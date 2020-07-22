@@ -1,6 +1,7 @@
 package ru.devsett.db.service;
 
 import org.springframework.stereotype.Service;
+import ru.devsett.bot.util.DiscordException;
 import ru.devsett.db.dto.ChannelEntity;
 import ru.devsett.db.dto.UserEntity;
 import ru.devsett.db.dto.WatchmanEntity;
@@ -26,14 +27,20 @@ public class WatchmanService {
     }
 
     public WatchmanEntity exit(ChannelEntity channelEntity, UserEntity user, long sysmilsExit) {
-        var watchman = watchmanRepository.findOneByChannelEntityAndUserEntityAndJoinTimeNotNullAndExitTimeIsNull(channelEntity,user);
+        var watchman = watchmanRepository.findAllByUserEntityAndJoinTimeNotNullAndExitTimeIsNull(user);
         if (watchman.isEmpty()) {
-            return null;
+            throw  new DiscordException("WATCHMAN EXIT не найден");
         }
-        var watchmanGet = watchman.get();
-        watchmanGet.setExitTime(new Date(sysmilsExit));
+        var watchmanGet = watchman.stream().filter(watchmanEntity -> watchmanEntity.getChannelEntity() != null &&
+                watchmanEntity.getId() == channelEntity.getId())
+                .findFirst();
+        var findWatch = watchmanGet.orElse(watchman.get(0));
+        findWatch.setExitTime(new Date(sysmilsExit));
+        var rtrn = watchmanRepository.save(findWatch);
 
-        return watchmanRepository.save(watchmanGet);
+        destroyOtherWatchman(user);
+
+        return rtrn;
     }
 
     public void destroyOtherWatchman(UserEntity userEntity) {

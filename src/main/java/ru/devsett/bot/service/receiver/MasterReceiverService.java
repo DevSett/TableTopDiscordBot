@@ -3,6 +3,7 @@ package ru.devsett.bot.service.receiver;
 import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Member;
+import discord4j.core.object.entity.channel.TextChannel;
 import discord4j.rest.util.Permission;
 import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
@@ -227,8 +228,21 @@ public class MasterReceiverService {
             } catch (Exception e) {
                 throw new DiscordException("Введите кол-во рейтинга!");
             }
+
+            var textChannel = MafiaBot.getGuild().getChannels().filter(chan -> chan.getName().equals("log"))
+                    .blockFirst();
+            var user = userService.getOrNewUser(event.getMember().get());
+            if (textChannel instanceof TextChannel) {
+                ru.devsett.db.dto.UserEntity finalUser = user;
+                int finalRaite = (int) number;
+                ((TextChannel) textChannel).createEmbed(spec -> spec.setTitle("Рейтинг")
+                        .setDescription("Для игрока " + finalUser.getUserName() + " начислено " + finalRaite + " рейтинга!"  )
+                        .setFooter("Рейтинг: " + finalUser.getRating()  +finalRaite, null))
+                        .block();
+            }
+
             discordService.sendChatEmbed(event, "Ваш рейтинг",
-                    userService.addRating(userService.getOrNewUser(event.getMember().get()), number).getRating() + "", null);
+                    userService.addRating(user, number).getRating() + "", null);
         } else {
             var user = userService.findByUserName(spl[1]);
             if (user == null) {
@@ -239,6 +253,17 @@ public class MasterReceiverService {
                     number = Integer.valueOf(spl[2]);
                 } catch (Exception e) {
                     throw new DiscordException("Введите кол-во рейтинга!");
+                }
+                var textChannel = MafiaBot.getGuild().getChannels().filter(chan -> chan.getName().equals("log"))
+                        .blockFirst();
+
+                if (textChannel instanceof TextChannel) {
+                    ru.devsett.db.dto.UserEntity finalUser = user;
+                    int finalRaite = (int) number;
+                    ((TextChannel) textChannel).createEmbed(spec -> spec.setTitle("Рейтинг")
+                            .setDescription("Для игрока " + finalUser.getUserName() + " начислено " + finalRaite + " рейтинга!"  )
+                            .setFooter("Рейтинг: " + finalUser.getRating() +finalRaite, null))
+                            .block();
                 }
                 discordService.sendChatEmbed(event, "Рейтинг " + spl[1], userService.addRating(user, number).getRating() + "", null);
             }
