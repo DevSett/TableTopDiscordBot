@@ -55,7 +55,7 @@ public class RangService {
                     int finalRaite = (int) raite;
                     ((TextChannel) textChannel).createEmbed(spec -> spec.setTitle("Рейтинг")
                             .setDescription("Для игрока " + finalUser.getUserName() + " начислено " + finalRaite + " рейтинга!"  )
-                            .setFooter("Рейтинг: " + finalUser.getRating()  +finalRaite, null))
+                            .setFooter("Рейтинг: " + (finalUser.getRating()  + finalRaite), null))
                             .block();
                 }
             }

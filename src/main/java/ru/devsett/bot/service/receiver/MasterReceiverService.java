@@ -237,7 +237,7 @@ public class MasterReceiverService {
                 int finalRaite = (int) number;
                 ((TextChannel) textChannel).createEmbed(spec -> spec.setTitle("Рейтинг")
                         .setDescription("Для игрока " + finalUser.getUserName() + " начислено " + finalRaite + " рейтинга!"  )
-                        .setFooter("Рейтинг: " + finalUser.getRating()  +finalRaite, null))
+                        .setFooter("Рейтинг: " + (finalUser.getRating()  +finalRaite), null))
                         .block();
             }
 
@@ -262,7 +262,7 @@ public class MasterReceiverService {
                     int finalRaite = (int) number;
                     ((TextChannel) textChannel).createEmbed(spec -> spec.setTitle("Рейтинг")
                             .setDescription("Для игрока " + finalUser.getUserName() + " начислено " + finalRaite + " рейтинга!"  )
-                            .setFooter("Рейтинг: " + finalUser.getRating() +finalRaite, null))
+                            .setFooter("Рейтинг: " + (finalUser.getRating() +finalRaite), null))
                             .block();
                 }
                 discordService.sendChatEmbed(event, "Рейтинг " + spl[1], userService.addRating(user, number).getRating() + "", null);
