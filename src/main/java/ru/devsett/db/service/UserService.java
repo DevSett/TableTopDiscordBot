@@ -2,6 +2,7 @@ package ru.devsett.db.service;
 
 import discord4j.core.object.entity.Member;
 import org.springframework.stereotype.Service;
+import ru.devsett.bot.util.DiscordException;
 import ru.devsett.db.dto.UserEntity;
 import ru.devsett.db.repository.UserRepository;
 
@@ -21,6 +22,10 @@ public class UserService {
 
 
     public UserEntity getOrNewUser(Member member) {
+        if (member == null) {
+           throw new DiscordException("Не найден пользователь!");
+        }
+
         var user = findById(member.getId().asLong());
         if (user == null) {
             user = findByUserName(member.getUsername());
@@ -47,7 +52,9 @@ public class UserService {
     }
 
     public UserEntity addRating(UserEntity user, Integer plus) {
-        user.setRating(user.getRating() + plus);
+        var raite = user.getRating();
+
+        user.setRating(raite == null ? 0 : user.getRating() + plus);
         return userRepository.save(user);
     }
 

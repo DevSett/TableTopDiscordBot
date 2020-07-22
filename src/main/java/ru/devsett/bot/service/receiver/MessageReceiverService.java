@@ -11,6 +11,7 @@ import ru.devsett.bot.intefaces.CommandName;
 import ru.devsett.bot.service.DiscordService;
 import ru.devsett.bot.util.DiscordException;
 import ru.devsett.config.DiscordConfig;
+import ru.devsett.db.service.UserService;
 
 
 import java.io.PrintWriter;
@@ -28,13 +29,14 @@ public class MessageReceiverService {
     private final DiscordService discordService;
     private final MasterReceiverService masterReceiverService;
     private final BunkerReceiverService bunkerReceiverService;
+    private final UserService userService;
 
-
-    public MessageReceiverService(DiscordService discordService, DiscordConfig discordConfig, MasterReceiverService masterReceiverService, BunkerReceiverService bunkerReceiverService) {
+    public MessageReceiverService(DiscordService discordService, DiscordConfig discordConfig, MasterReceiverService masterReceiverService, BunkerReceiverService bunkerReceiverService, UserService userService) {
         this.discordService = discordService;
         this.discordConfig = discordConfig;
         this.masterReceiverService = masterReceiverService;
         this.bunkerReceiverService = bunkerReceiverService;
+        this.userService = userService;
     }
 
     public void consume(MessageCreateEvent event) {
@@ -45,6 +47,25 @@ public class MessageReceiverService {
                 && event.getMember().isPresent()
                 && !event.getMember().get().isBot()) {
             reflectInvoke(event, content);
+        }
+
+        if (event.getMember().get().isBot() && event.getMember().get().getDisplayName().equals("Server Monitoring")) {
+            if (event.getMessage().getEmbeds().size() > 0) {
+                var emb = event.getMessage().getEmbeds().get(0);
+                if (emb.getDescription().isPresent()) {
+                    var desc = emb.getDescription().get();
+                    if (desc.contains("Server bumped by") && desc.contains("<") && desc.contains(">")) {
+                        var user = userService.findById(Long.parseLong(desc.substring(desc.indexOf("<"), desc.indexOf(">"))));
+                        if (user != null) {
+                            userService.addRating(user, 100);
+                        }
+                    }
+                }
+            }
+        } else {
+            if (!event.getMember().get().isBot() && content.equals("!bump")) {
+                userService.getOrNewUser(event.getMember().get());
+            }
         }
     }
 
@@ -80,7 +101,6 @@ public class MessageReceiverService {
                 var channel = event.getGuild().block().getChannels().filter(chan -> chan.getName().equals("log"))
                         .blockFirst();
                 if (channel instanceof TextChannel) {
-
                     ((TextChannel) channel).createEmbed(spec -> spec.setTitle("Client Exception")
                             .setDescription(clientException.getMessage()))
                             .block();
@@ -99,8 +119,13 @@ public class MessageReceiverService {
                     e.getTargetException().printStackTrace(pw);
                     pw.flush();
 
+                    var msg = sw.toString();
+                    if (msg.length() > 2000) {
+                        msg = e.getTargetException().getMessage();
+                    }
+                    String finalMsg = msg;
                     ((TextChannel) channel).createEmbed(spec -> spec.setTitle("NullPointerException")
-                            .setDescription(sw.toString()))
+                            .setDescription(finalMsg))
                             .block();
                 }
             }
