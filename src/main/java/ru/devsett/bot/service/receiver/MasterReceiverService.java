@@ -85,7 +85,7 @@ public class MasterReceiverService {
                         "рейтинг - показывает ваш рейтинг\n" +
                         "рейтинг %ЮзерНейм% - показывает рейтинг игрока\n" +
 
-                        "\nMADE BY KillSett v 0.16";
+                        "\nMADE BY KillSett v 0.18";
 
 
 
@@ -237,7 +237,7 @@ public class MasterReceiverService {
                 int finalRaite = (int) number;
                 ((TextChannel) textChannel).createEmbed(spec -> spec.setTitle("Рейтинг")
                         .setDescription("Для игрока " + finalUser.getUserName() + " начислено " + finalRaite + " рейтинга!"  )
-                        .setFooter("Рейтинг: " + (finalUser.getRating()  +finalRaite), null))
+                        .setFooter("Рейтинг: " + (userService.findById(finalUser.getId()).getRating()), null))
                         .block();
             }
 
@@ -262,7 +262,7 @@ public class MasterReceiverService {
                     int finalRaite = (int) number;
                     ((TextChannel) textChannel).createEmbed(spec -> spec.setTitle("Рейтинг")
                             .setDescription("Для игрока " + finalUser.getUserName() + " начислено " + finalRaite + " рейтинга!"  )
-                            .setFooter("Рейтинг: " + (finalUser.getRating() +finalRaite), null))
+                            .setFooter("Рейтинг: " + (userService.findById(finalUser.getId()).getRating()), null))
                             .block();
                 }
                 discordService.sendChatEmbed(event, "Рейтинг " + spl[1], userService.addRating(user, number).getRating() + "", null);
