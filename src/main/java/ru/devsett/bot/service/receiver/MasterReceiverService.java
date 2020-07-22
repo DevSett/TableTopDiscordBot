@@ -85,7 +85,7 @@ public class MasterReceiverService {
                         "рейтинг - показывает ваш рейтинг\n" +
                         "рейтинг %ЮзерНейм% - показывает рейтинг игрока\n" +
 
-                        "\nMADE BY KillSett v 0.15";
+                        "\nMADE BY KillSett v 0.16";
 
 
 
@@ -243,7 +243,7 @@ public class MasterReceiverService {
 
             discordService.sendChatEmbed(event, "Ваш рейтинг",
                     userService.addRating(user, number).getRating() + "", null);
-        } else {
+        } else if (spl.length > 2){
             var user = userService.findByUserName(spl[1]);
             if (user == null) {
                 discordService.sendChat(event, "Пользователь не найден!");

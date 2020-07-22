@@ -49,7 +49,7 @@ public class MessageReceiverService {
             reflectInvoke(event, content);
         }
 
-        if (event.getMember().get().isBot() && event.getMember().get().getDisplayName().equals("Server Monitoring")) {
+        if (event.getMember().isPresent() && event.getMember().get().isBot() && event.getMember().get().getDisplayName().equals("Server Monitoring")) {
             if (event.getMessage().getEmbeds().size() > 0) {
                 var emb = event.getMessage().getEmbeds().get(0);
                 if (emb.getDescription().isPresent()) {
@@ -63,7 +63,7 @@ public class MessageReceiverService {
                 }
             }
         } else {
-            if (!event.getMember().get().isBot() && content.equals("!bump")) {
+            if (event.getMember().isPresent() && !event.getMember().get().isBot() && content.equals("!bump")) {
                 userService.getOrNewUser(event.getMember().get());
             }
         }
