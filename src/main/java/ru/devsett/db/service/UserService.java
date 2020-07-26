@@ -59,7 +59,7 @@ public class UserService {
         user.setRating(raite == null ? 0 : user.getRating() + plus);
 
         var desc = "Для игрока <@!" + user.getId() + "> начислено " + plus + " рейтинга от " + from;
-        discordService.toLog("Рейтинг", "Новый рейтинг:" + user.getRating(), desc, Color.SEA_GREEN);
+        discordService.toLog("Рейтинг", "Новый рейтинг: " + user.getRating(), desc, Color.SEA_GREEN);
 
         return userRepository.save(user);
     }
