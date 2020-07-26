@@ -4,6 +4,7 @@ import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Message;
 import discord4j.core.object.entity.channel.TextChannel;
 import discord4j.rest.http.client.ClientException;
+import discord4j.rest.util.Color;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
@@ -31,7 +32,11 @@ public class MessageReceiverService {
     private final BunkerReceiverService bunkerReceiverService;
     private final UserService userService;
 
-    public MessageReceiverService(DiscordService discordService, DiscordConfig discordConfig, MasterReceiverService masterReceiverService, BunkerReceiverService bunkerReceiverService, UserService userService) {
+    public MessageReceiverService(DiscordService discordService,
+                                  DiscordConfig discordConfig,
+                                  MasterReceiverService masterReceiverService,
+                                  BunkerReceiverService bunkerReceiverService,
+                                  UserService userService) {
         this.discordService = discordService;
         this.discordConfig = discordConfig;
         this.masterReceiverService = masterReceiverService;
@@ -40,41 +45,50 @@ public class MessageReceiverService {
     }
 
     public void consume(MessageCreateEvent event) {
-        Message message = event.getMessage();
-        String content = message.getContent();
-        if (content.startsWith(discordConfig.getPrefix())
-                && content.length() > 2
-                && event.getMember().isPresent()
-                && !event.getMember().get().isBot()) {
-            reflectInvoke(event, content);
-        }
-
         try {
-            if (event.getMember().isPresent() && event.getMember().get().isBot() && event.getMember().get().getDisplayName().equals("Server Monitoring")) {
-                if (event.getMessage().getEmbeds().size() > 0) {
-                    var emb = event.getMessage().getEmbeds().get(0);
-                    if (emb.getDescription().isPresent()) {
-                        var desc = emb.getDescription().get();
-                        if (desc.contains("Server bumped by") && desc.contains("<") && desc.contains(">")) {
-                            var user = userService.findById(Long.parseLong(desc.substring(desc.indexOf("<") + 3, desc.indexOf(">"))));
-                            if (user != null) {
-                                userService.addRating(user, 100);
-                            }
-                        }
-                    }
-                }
-            } else {
-                if (event.getMember().isPresent() && !event.getMember().get().isBot() && content.equals("!bump")) {
-                    userService.getOrNewUser(event.getMember().get());
+            Message message = event.getMessage();
+            String content = message.getContent();
+            if (content.startsWith(discordConfig.getPrefix())
+                    && content.length() > 2
+                    && event.getMember().isPresent()
+                    && !event.getMember().get().isBot()) {
+                reflectInvoke(event, content);
+            }
+            bump(event, content);
+        } catch (Exception e) {
+            discordService.toLogTextChannel("Message Exception", e.getMessage(), event, Color.RED);
+        }
+    }
+
+    private void bump(MessageCreateEvent event, String content) {
+        if (event.getMember().isEmpty()) {
+            return;
+        }
+        if (isServerMonitoring(event)) {
+            if (event.getMessage().getEmbeds().size() == 0) {
+                return;
+            }
+            var emb = event.getMessage().getEmbeds().get(0);
+            if (emb.getDescription().isEmpty()) {
+                return;
+            }
+            var desc = emb.getDescription().get();
+            if (desc.contains("Server bumped by") && desc.contains("<") && desc.contains(">")) {
+                var user = userService.findById(Long.parseLong(desc.substring(desc.indexOf("<") + 3, desc.indexOf(">"))));
+                if (user != null) {
+                    userService.addRating(user, 100, "!bump", discordService);
                 }
             }
-        } catch (Exception e) {
-            var channel = event.getGuild().block().getChannels().filter(chan -> chan.getName().equals("log")).blockFirst();
-            String finalMsg = e.getMessage();
-            ((TextChannel) channel).createEmbed(spec -> spec.setTitle("Exception")
-                    .setDescription(finalMsg))
-                    .block();
+        } else {
+            if (!event.getMember().get().isBot() && content.equals("!bump")) {
+                userService.getOrNewUser(event.getMember().get());
+            }
         }
+    }
+
+    private boolean isServerMonitoring(MessageCreateEvent event) {
+        return event.getMember().get().isBot()
+                && event.getMember().get().getDisplayName().equals("Server Monitoring");
     }
 
 
@@ -97,49 +111,28 @@ public class MessageReceiverService {
         try {
             method.invoke(object, event, content.substring(discordConfig.getPrefix().length()));
         } catch (InvocationTargetException e) {
-            if (e.getTargetException() instanceof ClientException) {
-                ClientException clientException = (ClientException) e.getTargetException();
-                if (clientException.getStatus() == HttpResponseStatus.FORBIDDEN) {
-                    discordService.sendChat(event, "Недостаточно прав!");
-                }
-                if (clientException.getStatus() == HttpResponseStatus.BAD_REQUEST) {
-                    discordService.sendChat(event, "Ошибка выполнения!");
-                }
-
-                var channel = event.getGuild().block().getChannels().filter(chan -> chan.getName().equals("log"))
-                        .blockFirst();
-                if (channel instanceof TextChannel) {
-                    ((TextChannel) channel).createEmbed(spec -> spec.setTitle("Client Exception")
-                            .setDescription(clientException.getMessage()))
-                            .block();
-                }
-            }
+            tryClientException(event, e);
             if (e.getTargetException() instanceof DiscordException) {
                 DiscordException discordException = (DiscordException) e.getTargetException();
                 discordService.sendChat(event, discordException.getMessage());
             }
-            if (e.getTargetException() instanceof NullPointerException) {
-                discordService.sendChat(event, "Недостаточно прав!");
-                var channel = event.getGuild().block().getChannels().filter(chan -> chan.getName().equals("log")).blockFirst();
-                if (channel instanceof TextChannel) {
-                    StringWriter sw = new StringWriter();
-                    PrintWriter pw = new PrintWriter(sw);
-                    e.getTargetException().printStackTrace(pw);
-                    pw.flush();
-
-                    var msg = sw.toString();
-                    if (msg.length() > 2000) {
-                        msg = e.getTargetException().getMessage();
-                    }
-                    String finalMsg = msg;
-                    ((TextChannel) channel).createEmbed(spec -> spec.setTitle("NullPointerException")
-                            .setDescription(finalMsg))
-                            .block();
-                }
-            }
+            discordService.toLogTextChannel("Message Exception", e.getTargetException().getMessage(), event, Color.RED);
             log.error(e);
         } catch (IllegalAccessException e) {
+            discordService.toLogTextChannel("Message Exception", e.getMessage(), event, Color.RED);
             log.error(e);
+        }
+    }
+
+    private void tryClientException(MessageCreateEvent event, InvocationTargetException e) {
+        if (e.getTargetException() instanceof ClientException) {
+            ClientException clientException = (ClientException) e.getTargetException();
+            if (clientException.getStatus() == HttpResponseStatus.FORBIDDEN) {
+                discordService.sendChat(event, "Недостаточно прав!");
+            }
+            if (clientException.getStatus() == HttpResponseStatus.BAD_REQUEST) {
+                discordService.sendChat(event, "Ошибка выполнения!");
+            }
         }
     }
 

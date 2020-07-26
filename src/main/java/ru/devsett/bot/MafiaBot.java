@@ -2,6 +2,8 @@ package ru.devsett.bot;
 
 import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.VoiceStateUpdateEvent;
+import discord4j.core.event.domain.guild.MemberJoinEvent;
+import discord4j.core.event.domain.lifecycle.ConnectEvent;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Guild;
 import lombok.Getter;

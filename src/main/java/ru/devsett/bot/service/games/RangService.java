@@ -1,27 +1,26 @@
 package ru.devsett.bot.service.games;
 
 import discord4j.core.object.VoiceState;
-import discord4j.core.object.entity.channel.TextChannel;
 import org.springframework.stereotype.Service;
-import ru.devsett.bot.MafiaBot;
+import ru.devsett.bot.service.DiscordService;
 import ru.devsett.bot.util.DiscordException;
 import ru.devsett.db.service.ChannelService;
 import ru.devsett.db.service.UserService;
 import ru.devsett.db.service.WatchmanService;
-
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 @Service
 public class RangService {
     private final UserService userService;
     private final WatchmanService watchmanService;
     private final ChannelService channelService;
+    private final DiscordService discordService;
 
-    public RangService(UserService userService, WatchmanService watchmanService, ChannelService channelService) {
+    public RangService(UserService userService, WatchmanService watchmanService, ChannelService channelService,
+                       DiscordService discordService) {
         this.userService = userService;
         this.watchmanService = watchmanService;
         this.channelService = channelService;
+        this.discordService = discordService;
     }
 
     public void join(VoiceState current) {
@@ -32,43 +31,24 @@ public class RangService {
     }
 
     public void exit(VoiceState current, VoiceState old) {
-
-
         var member = current.getMember().block();
         if (member == null) {
             member = old.getMember().block();
         }
-
-
-
         var user = userService.getOrNewUser(member);
         var channel = old.getChannel().block();
         var channelEntity = channelService.getOrNewChannel(channel.getName(), channel.getId().asLong(), true);
         var watchman = watchmanService.exit(channelEntity, user, System.currentTimeMillis());
-
         var channelNew = current.getChannel().block();
         if (channelNew != null) {
             join(current);
         }
-
         if (watchman != null) {
             var timeSec = (watchman.getExitTime().getTime() - watchman.getJoinTime().getTime()) / 1000;
             var raite = (timeSec * 0.004);
             raite = raite > 116 ? 116 : (int) raite;
             if (raite >= 1) {
-                user = userService.addRating(user, (int) raite);
-
-                var textChannel = MafiaBot.getGuild().getChannels().filter(chan -> chan.getName().equals("log"))
-                        .blockFirst();
-
-                if (textChannel instanceof TextChannel) {
-                    ru.devsett.db.dto.UserEntity finalUser = user;
-                    int finalRaite = (int) raite;
-                    ((TextChannel) textChannel).createEmbed(spec -> spec.setTitle("Рейтинг")
-                            .setDescription("Для игрока " + finalUser.getUserName() + " начислено " + finalRaite + " рейтинга!")
-                            .setFooter("Рейтинг: " + (userService.findById(finalUser.getId()).getRating()), null))
-                            .block();
-                }
+                userService.addRating(user, (int) raite, "Watchman", discordService);
             }
         } else {
             throw new DiscordException("WATCHMAN EXIT не найден");

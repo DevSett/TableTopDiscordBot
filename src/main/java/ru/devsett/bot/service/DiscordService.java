@@ -1,15 +1,21 @@
 package ru.devsett.bot.service;
 
 import discord4j.common.util.Snowflake;
+import discord4j.core.event.domain.VoiceStateUpdateEvent;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Guild;
 import discord4j.core.object.entity.Member;
+import discord4j.core.object.entity.channel.TextChannel;
 import discord4j.core.object.entity.channel.VoiceChannel;
 import discord4j.rest.http.client.ClientException;
+import discord4j.rest.util.Color;
 import discord4j.rest.util.Permission;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
+import ru.devsett.bot.MafiaBot;
 import ru.devsett.bot.intefaces.NickNameEvent;
+import ru.devsett.bot.service.receiver.MessageReceiverService;
 import ru.devsett.bot.util.ActionDo;
 import ru.devsett.bot.util.DiscordException;
 import ru.devsett.bot.util.Role;
@@ -17,13 +23,12 @@ import ru.devsett.db.service.MessageService;
 import ru.devsett.db.service.UserService;
 
 import java.security.SecureRandom;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Log4j2
 public class DiscordService {
 
     private final MessageService messageService;
@@ -31,13 +36,13 @@ public class DiscordService {
 
     public DiscordService(MessageService messageService, UserService userService) {
         this.messageService = messageService;
-
         this.userService = userService;
     }
 
     public ActionDo addOrRemoveRole(MessageCreateEvent event, Role role) {
         return addOrRemoveRole(event.getGuild().block(), event.getMember(), role);
     }
+
     public ActionDo addOrRemoveRole(Guild guild, Optional<Member> member, Role role) {
         if (!member.isPresent()) {
             return ActionDo.NOTHING;
@@ -82,7 +87,7 @@ public class DiscordService {
         }
         return event.getMember().get()
                 .getRoles()
-                .any(roleDiscord -> Arrays.stream(roles).anyMatch(role -> role.getName().equals(roleDiscord.getName()) ))
+                .any(roleDiscord -> Arrays.stream(roles).anyMatch(role -> role.getName().equals(roleDiscord.getName())))
                 .block();
     }
 
@@ -93,7 +98,7 @@ public class DiscordService {
 
         return event.getMember().get()
                 .getRoles()
-                .filter(roleDiscord ->  role.getName().equals(roleDiscord.getName()))
+                .filter(roleDiscord -> role.getName().equals(roleDiscord.getName()))
                 .blockFirst().getPermissions().stream().anyMatch(perm -> Arrays.asList(permissions).contains(perm));
     }
 
@@ -121,7 +126,7 @@ public class DiscordService {
             }
 
             return channel;
-        } catch (NullPointerException e ) {
+        } catch (NullPointerException e) {
             throw new DiscordException("Войс канал не найден или недостаточно прав!");
         }
     }
@@ -285,6 +290,53 @@ public class DiscordService {
             }
             sendChat(event, "Выпущен из клетки!");
 
+        }
+    }
+
+    public void toLogTextChannel(String title, String description, MessageCreateEvent event, Color color) {
+        var member = event.getMember().orElse(null);
+        var name = member != null ? member.getUsername() : "Неизвестно";
+        var current = event.getMessage().getChannel().block();
+        var currentName = "Неизвестно";
+        if (current != null && current instanceof TextChannel) {
+            currentName = ((TextChannel) current).getName();
+        }
+        var footer = "Юзер: " + name + ", Канал: " + currentName;
+        toLog(title, footer, description, color);
+
+    }
+
+    public void toLogVoiceChannel(String title, String description, VoiceStateUpdateEvent event, Color color) {
+        var member = event.getCurrent().getMember().block();
+        var name = member != null ? member.getUsername() : "Неизвестно";
+        var current = event.getCurrent().getChannel().block();
+        var currentName = current != null ? current.getName() : "Неизвестно";
+        var footer = "Юзер: " + name + ", Канал: " + currentName;
+
+        toLog(title, footer, description, color);
+    }
+
+    public void toLog(String title, String footer, String description, Color color) {
+        try {
+            var channel = MafiaBot.getGuild().getChannels().filter(chan -> chan.getName().equals("log")).blockFirst();
+
+            if (channel == null || !(channel instanceof TextChannel)) {
+                return;
+            }
+
+            var textChannel = (TextChannel) channel;
+
+            textChannel.createEmbed(spec -> {
+                spec.setTitle(title)
+                        .setDescription(description)
+                        .setFooter(footer, null);
+                if (color != null) {
+                    spec.setColor(color);
+                }
+            }).block();
+
+        } catch (Exception e2) {
+            log.error(e2);
         }
     }
 }

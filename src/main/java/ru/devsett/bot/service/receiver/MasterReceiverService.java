@@ -85,13 +85,12 @@ public class MasterReceiverService {
                         "рейтинг - показывает ваш рейтинг\n" +
                         "рейтинг %ЮзерНейм% - показывает рейтинг игрока\n" +
 
-                        "\nMADE BY KillSett v 0.21";
-
+                        "\nMADE BY KillSett v 0.22";
 
 
         discordService.sendChatEmbed(event, "Команды", msgHelp, "https://github.com/DevSett/TableTopDiscordBot");
         if (discordService.isPresentRole(event, Role.MODERATOR)) {
-            var  msgHelp2  = "фастбан %Начала никнейма который сидит в вашем войсе% %Причина% %Кол-во часов%\n"
+            var msgHelp2 = "фастбан %Начала никнейма который сидит в вашем войсе% %Причина% %Кол-во часов%\n"
                     + "бан %юзернейм% %Причина% %Кол-во часов%\n"
                     + "анбан %юзернейм%\n"
                     + "адд-рейтинг %юзернейм% %кол-во%\n"
@@ -222,52 +221,32 @@ public class MasterReceiverService {
         }
         var spl = command.split(" ");
         if (spl.length == 2) {
-            Integer number = 0;
-            try {
-                number = Integer.valueOf(spl[1]);
-            } catch (Exception e) {
-                throw new DiscordException("Введите кол-во рейтинга!");
-            }
-
-            var textChannel = MafiaBot.getGuild().getChannels().filter(chan -> chan.getName().equals("log"))
-                    .blockFirst();
+            var number = getRate(spl, 1);
             var user = userService.getOrNewUser(event.getMember().get());
-            if (textChannel instanceof TextChannel) {
-                ru.devsett.db.dto.UserEntity finalUser = user;
-                int finalRaite = (int) number;
-                ((TextChannel) textChannel).createEmbed(spec -> spec.setTitle("Рейтинг")
-                        .setDescription("Для игрока " + finalUser.getUserName() + " начислено " + finalRaite + " рейтинга от " +event.getMember().get().getUsername() +" !" )
-                        .setFooter("Рейтинг: " + (userService.findById(finalUser.getId()).getRating()), null))
-                        .block();
-            }
-
-            discordService.sendChatEmbed(event, "Ваш рейтинг",
-                    userService.addRating(user, number).getRating() + "", null);
-        } else if (spl.length > 2){
+            var newRate = userService.addRating(user, number,
+                    "<@!" + event.getMember().get().getId().asLong() + ">", discordService).getRating();
+            discordService.sendChatEmbed(event, "Ваш рейтинг", newRate + "", null);
+        } else if (spl.length > 2) {
             var user = userService.findByUserName(spl[1]);
             if (user == null) {
                 discordService.sendChat(event, "Пользователь не найден!");
             } else {
-                Integer number = 0;
-                try {
-                    number = Integer.valueOf(spl[2]);
-                } catch (Exception e) {
-                    throw new DiscordException("Введите кол-во рейтинга!");
-                }
-                var textChannel = MafiaBot.getGuild().getChannels().filter(chan -> chan.getName().equals("log"))
-                        .blockFirst();
-
-                if (textChannel instanceof TextChannel) {
-                    ru.devsett.db.dto.UserEntity finalUser = user;
-                    int finalRaite = (int) number;
-                    ((TextChannel) textChannel).createEmbed(spec -> spec.setTitle("Рейтинг")
-                            .setDescription("Для игрока " + finalUser.getUserName() + " начислено " + finalRaite + " рейтинга от " +event.getMember().get().getUsername() +" !"  )
-                            .setFooter("Рейтинг: " + (userService.findById(finalUser.getId()).getRating()), null))
-                            .block();
-                }
-                discordService.sendChatEmbed(event, "Рейтинг " + spl[1], userService.addRating(user, number).getRating() + "", null);
+                var number = getRate(spl, 2);
+                var rate = userService.addRating(user, number,
+                        "<@!" + event.getMember().get().getId().asLong() + ">", discordService).getRating();
+                discordService.sendChatEmbed(event, "Рейтинг " + spl[1], rate + "", null);
             }
         }
+    }
+
+    private Integer getRate(String[] spl, Integer num) {
+        Integer number = 0;
+        try {
+            number = Integer.valueOf(spl[num]);
+        } catch (Exception e) {
+            throw new DiscordException("Введите кол-во рейтинга!");
+        }
+        return number;
     }
 
     @CommandName(names = {"телеграм"})
@@ -330,6 +309,6 @@ public class MasterReceiverService {
                     log.error(e);
                 }
             });
-        }, 0, 15, TimeUnit.SECONDS);
+        }, 0, 1, TimeUnit.HOURS);
     }
 }

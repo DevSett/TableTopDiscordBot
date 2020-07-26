@@ -1,7 +1,9 @@
 package ru.devsett.db.service;
 
 import discord4j.core.object.entity.Member;
+import discord4j.rest.util.Color;
 import org.springframework.stereotype.Service;
+import ru.devsett.bot.service.DiscordService;
 import ru.devsett.bot.util.DiscordException;
 import ru.devsett.db.dto.UserEntity;
 import ru.devsett.db.repository.UserRepository;
@@ -23,7 +25,7 @@ public class UserService {
 
     public UserEntity getOrNewUser(Member member) {
         if (member == null) {
-           throw new DiscordException("Не найден пользователь!");
+            throw new DiscordException("Не найден пользователь!");
         }
 
         var user = findById(member.getId().asLong());
@@ -51,10 +53,14 @@ public class UserService {
         return userRepository.findOneByUserName(nick).orElse(null);
     }
 
-    public UserEntity addRating(UserEntity user, Integer plus) {
+    public UserEntity addRating(UserEntity user, Integer plus, String from, DiscordService discordService) {
         var raite = user.getRating();
 
         user.setRating(raite == null ? 0 : user.getRating() + plus);
+
+        var desc = "Для игрока <@!" + user.getId() + "> начислено " + plus + " рейтинга от " + from;
+        discordService.toLog("Рейтинг", "Новый рейтинг:" + user.getRating(), desc, Color.SEA_GREEN);
+
         return userRepository.save(user);
     }
 

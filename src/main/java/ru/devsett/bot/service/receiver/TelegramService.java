@@ -95,7 +95,6 @@ public class TelegramService extends TelegramLongPollingBot {
 
     public void sendMessage(Long chatId, String text) {
         sendMessage(chatId, text, null);
-
     }
 
     public void sendMessage(Long chatId, String text, ReplyKeyboard replyKeyboardMarkup) {
