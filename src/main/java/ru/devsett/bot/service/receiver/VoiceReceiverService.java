@@ -22,13 +22,12 @@ public class VoiceReceiverService {
 
     public void consume(VoiceStateUpdateEvent event) {
         try {
-//            event.get
-//            if (event.getgetgetCurrent() != null && event.getOld().isEmpty()) {
-//                join(event);
-//            }
-//            if (event.getCurrent() != null && event.getOld().isPresent()) {
-//                swap(event);
-//            }
+            if (event.getCurrent() != null && event.getOld().isEmpty()) {
+                join(event);
+            }
+            if (event.getCurrent() != null && event.getOld().isPresent()) {
+                swap(event);
+            }
         } catch (Exception e) {
             discordService.toLogVoiceChannel("Voice Exception", e.getMessage(), null, Color.RED);
         }
