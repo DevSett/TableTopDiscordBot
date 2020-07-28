@@ -45,7 +45,7 @@ public class RangService {
         }
         if (watchman != null) {
             var timeSec = (watchman.getExitTime().getTime() - watchman.getJoinTime().getTime()) / 1000;
-            var raite = (timeSec * 4.004);
+            var raite = (timeSec * 0.004);
             raite = raite > 116 ? 116 : (int) raite;
             if (raite >= 1) {
                 userService.addRating(user, (int) raite, "Watchman", discordService);
