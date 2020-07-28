@@ -294,12 +294,17 @@ public class DiscordService {
     }
 
     public void toLogTextChannel(String title, String description, MessageCreateEvent event, Color color) {
-        var member = event.getMember().orElse(null);
-        var name = member != null ? member.getUsername() : "Неизвестно";
-        var current = event.getMessage().getChannel().block();
+        var name = "Неизвестно";
         var currentName = "Неизвестно";
+
+        try {
+        var member = event.getMember().orElse(null);
+        name = member != null ? member.getUsername() : name;
+        var current = event.getMessage().getChannel().block();
         if (current != null && current instanceof TextChannel) {
             currentName = ((TextChannel) current).getName();
+        }
+        } catch (Exception ex) {
         }
         var footer = "Юзер: " + name + ", Канал: " + currentName;
         toLog(title, footer, description, color);
@@ -307,10 +312,16 @@ public class DiscordService {
     }
 
     public void toLogVoiceChannel(String title, String description, VoiceStateUpdateEvent event, Color color) {
-        var member = event.getCurrent().getMember().block();
-        var name = member != null ? member.getUsername() : "Неизвестно";
-        var current = event.getCurrent().getChannel().block();
-        var currentName = current != null ? current.getName() : "Неизвестно";
+        var name = "Неизвестно";
+        var currentName = "Неизвестно";
+
+        try {
+            var member = event.getCurrent().getMember().block();
+            name = member != null ? member.getUsername() : name;
+            var current = event.getCurrent().getChannel().block();
+            currentName = current != null ? current.getName() : currentName;
+        } catch (Exception ex) {
+        }
         var footer = "Юзер: " + name + ", Канал: " + currentName;
 
         toLog(title, footer, description, color);
