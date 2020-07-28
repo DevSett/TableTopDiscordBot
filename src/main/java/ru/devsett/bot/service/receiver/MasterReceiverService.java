@@ -85,7 +85,7 @@ public class MasterReceiverService {
                         "рейтинг - показывает ваш рейтинг\n" +
                         "рейтинг %ЮзерНейм% - показывает рейтинг игрока\n" +
 
-                        "\nMADE BY KillSett v 0.23";
+                        "\nMADE BY KillSett v 0.24";
 
 
         discordService.sendChatEmbed(event, "Команды", msgHelp, "https://github.com/DevSett/TableTopDiscordBot");
