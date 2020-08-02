@@ -99,7 +99,7 @@ public class RangService {
                 + "\n" + winRateService.getWinRateSheriff(winRate) + "%"
                 + "\n" + winRateService.getWinRateDon(winRate) + "%"
                 + "\n" + winRateService.getWinRateBest(winRate) + "%"
-                + "\n" + (winRateService.getWinRateRed(winRate) + winRateService.getWinRateBlack(winRate) / 2) + "%"
+                + "\n" + ((winRateService.getWinRateRed(winRate) + winRateService.getWinRateBlack(winRate)) / 2) + "%"
                 , true));
 
 
@@ -119,7 +119,7 @@ public class RangService {
             list.stream().forEach(rate -> {
                 names.add("<@!" + rate.getUserEntity().getId() + ">");
                 totals.add(rate.totalMafiaGames() + "");
-                winRate.add((winRateService.getWinRateRed(rate) + winRateService.getWinRateBlack(rate) / 2) + "%");
+                winRate.add(((winRateService.getWinRateRed(rate) + winRateService.getWinRateBlack(rate)) / 2) + "%");
             });
 
             fields.add(new Field(":detective: Игрок", String.join("\n", names), true));
