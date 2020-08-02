@@ -103,7 +103,6 @@ public class MessageReceiverService {
         secondMethod.ifPresent(method -> {
             invoke(event, bunkerReceiverService, content, method);
         });
-
     }
 
     private void invoke(MessageCreateEvent event, Object object, String content, Method method) {

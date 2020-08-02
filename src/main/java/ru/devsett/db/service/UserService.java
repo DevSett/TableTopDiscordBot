@@ -5,9 +5,11 @@ import discord4j.rest.util.Color;
 import org.springframework.stereotype.Service;
 import ru.devsett.bot.service.DiscordService;
 import ru.devsett.bot.util.DiscordException;
+import ru.devsett.bot.util.Field;
 import ru.devsett.db.dto.UserEntity;
 import ru.devsett.db.repository.UserRepository;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -58,8 +60,8 @@ public class UserService {
 
         user.setRating(raite == null ? 0 : user.getRating() + plus);
 
-        var desc = "Для игрока <@!" + user.getId() + "> начислено " + plus + " рейтинга от " + from;
-        discordService.toLog("Рейтинг", "Новый рейтинг: " + user.getRating(), desc, Color.SEA_GREEN);
+        var desc = ":moneybag: Для игрока <@!" + user.getId() + "> начислено " + plus + " мафкоинов от " + from;
+        discordService.toLog("Мафкоины", "Новый баланс: " + user.getRating(), desc, Color.SEA_GREEN);
 
         return userRepository.save(user);
     }
@@ -91,10 +93,21 @@ public class UserService {
         userRepository.save(user);
     }
 
-    public String getTop() {
+    public List<Field> getTopMoney() {
         var users = userRepository.findAllByOrderByRatingDesc();
-        AtomicInteger index = new AtomicInteger(1);
-        return users.subList(0, 10).stream().map(user -> index.getAndIncrement() + ". " + user.getUserName() + " - " + user.getRating())
-                .collect(Collectors.joining("\n"));
+
+        var list = new ArrayList<Field>();
+        List<String> names = new ArrayList<>();
+        List<String> money = new ArrayList<>();
+
+         users.subList(0, 10)
+                .forEach(user ->{
+                    names.add("<@!"+user.getId()+">");
+                    money.add(user.getRating()+"");
+                });
+
+         list.add(new Field(":detective: Игрок", String.join("\n",names),true));
+         list.add(new Field(":money_with_wings: Баланс",String.join("\n",money),true));
+         return list;
     }
 }

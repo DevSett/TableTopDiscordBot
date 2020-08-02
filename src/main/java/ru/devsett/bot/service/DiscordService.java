@@ -3,6 +3,8 @@ package ru.devsett.bot.service;
 import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.VoiceStateUpdateEvent;
 import discord4j.core.event.domain.message.MessageCreateEvent;
+import discord4j.core.object.Embed;
+import discord4j.core.object.VoiceState;
 import discord4j.core.object.entity.Guild;
 import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.channel.TextChannel;
@@ -18,6 +20,7 @@ import ru.devsett.bot.intefaces.NickNameEvent;
 import ru.devsett.bot.service.receiver.MessageReceiverService;
 import ru.devsett.bot.util.ActionDo;
 import ru.devsett.bot.util.DiscordException;
+import ru.devsett.bot.util.Field;
 import ru.devsett.bot.util.Role;
 import ru.devsett.db.service.MessageService;
 import ru.devsett.db.service.UserService;
@@ -109,23 +112,21 @@ public class DiscordService {
 
     public List<Member> getChannelPlayers(VoiceChannel channel,
                                           String... excludeMembers) {
-        return channel.getVoiceStates().map(st -> st.getMember().block())
-                .filter(member -> excludeMembers.length > 0 ? Arrays.stream(excludeMembers)
-                        .anyMatch(exc -> !getNickName(member).startsWith(exc)) : true
+        return channel.getVoiceStates()
+                .map(st -> st.getMember().block())
+                .filter(member -> excludeMembers.length <= 0 || Arrays.stream(excludeMembers)
+                        .anyMatch(exc -> !getNickName(member).startsWith(exc))
                 ).collectList().block();
     }
 
     public VoiceChannel getChannel(MessageCreateEvent event) {
         try {
-            var channel = event.getMember().get()
-                    .getVoiceState().block()
-                    .getChannel().block();
-
-            if (channel == null) {
-                throw new NullPointerException();
-            }
-
-            return channel;
+            return event.getMember()
+                    .orElseThrow(NullPointerException::new)
+                    .getVoiceState()
+                    .map(VoiceState::getChannelId)
+                    .map(id -> MafiaBot.getGuild().getChannelById(id.orElseThrow(NullPointerException::new)))
+                    .block().cast(VoiceChannel.class).block();
         } catch (NullPointerException e) {
             throw new DiscordException("Войс канал не найден или недостаточно прав!");
         }
@@ -222,14 +223,25 @@ public class DiscordService {
     }
 
     public void sendChatEmbed(MessageCreateEvent event, String title, String msgHelp, String url) {
+        sendChatEmbed(event, title, msgHelp, url, Collections.emptyList());
+    }
+
+    public void sendChatEmbed(MessageCreateEvent event, String title, String msgHelp, String url, List<Field> fields) {
         event.getMessage().getChannel().block().createEmbed(emd -> {
-            emd.setTitle(title).setDescription(msgHelp);
+            emd.setTitle(title);
+            if (msgHelp != null) {
+                emd.setDescription(msgHelp);
+            }
             if (url != null) {
                 emd.setUrl(url);
             }
+            if (!fields.isEmpty()) {
+                for (Field field : fields) {
+                    emd.addField(field.getName(), field.getValue(), field.isInline());
+                }
+            }
         }).block();
     }
-
 
     public void ban(MessageCreateEvent event, String userName, String reason, int hours) {
         var findedMember = event.getGuild().block().getMembers().filter(member -> member.getUsername().equals(userName)).blockFirst();
@@ -298,13 +310,13 @@ public class DiscordService {
         var currentName = "Неизвестно";
 
         try {
-        var member = event.getMember().orElse(null);
-        name = member != null ? member.getUsername() : name;
-        var current = event.getMessage().getChannel().block();
-        if (current != null && current instanceof TextChannel) {
-            currentName = ((TextChannel) current).getName();
-        }
-        } catch (Exception ex) {
+            var member = event.getMember().orElse(null);
+            name = member != null ? member.getUsername() : name;
+            var current = event.getMessage().getChannel().block();
+            if (current instanceof TextChannel) {
+                currentName = ((TextChannel) current).getName();
+            }
+        } catch (Exception ignored) {
         }
         var footer = "Юзер: " + name + ", Канал: " + currentName;
         toLog(title, footer, description, color);
@@ -320,7 +332,7 @@ public class DiscordService {
             name = member != null ? member.getUsername() : name;
             var current = event.getCurrent().getChannel().block();
             currentName = current != null ? current.getName() : currentName;
-        } catch (Exception ex) {
+        } catch (Exception ignored) {
         }
         var footer = "Юзер: " + name + ", Канал: " + currentName;
 
@@ -331,7 +343,7 @@ public class DiscordService {
         try {
             var channel = MafiaBot.getGuild().getChannels().filter(chan -> chan.getName().equals("log")).blockFirst();
 
-            if (channel == null || !(channel instanceof TextChannel)) {
+            if (!(channel instanceof TextChannel)) {
                 return;
             }
 
