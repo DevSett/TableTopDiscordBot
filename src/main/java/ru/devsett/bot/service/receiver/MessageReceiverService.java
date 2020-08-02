@@ -74,7 +74,7 @@ public class MessageReceiverService {
             }
             var desc = emb.getDescription().get();
             if (desc.contains("Server bumped by") && desc.contains("<") && desc.contains(">")) {
-                var user = userService.findById(Long.parseLong(desc.substring(desc.indexOf("<") + 3, desc.indexOf(">"))));
+                var user = userService.findById(Long.parseLong(desc.substring(desc.indexOf("<") + 2, desc.indexOf(">"))));
                 if (user != null) {
                     userService.addRating(user, 100, "!bump", discordService);
                 }
