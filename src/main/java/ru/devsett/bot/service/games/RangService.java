@@ -101,6 +101,7 @@ public class RangService {
                 + "\n" + winRateService.getWinRateSheriff(winRate) + "%"
                 + "\n" + winRateService.getWinRateDon(winRate) + "%"
                 + "\n" + winRateService.getWinRateBest(winRate) + "%"
+                + "\n"
                 + "\n" + winRateService.getTotalRate(winRate) + "%"
                 , true));
 
