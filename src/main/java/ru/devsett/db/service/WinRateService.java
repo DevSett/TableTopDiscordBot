@@ -7,6 +7,7 @@ import ru.devsett.db.repository.WinRateRepository;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -148,7 +149,7 @@ public class WinRateService {
 
     public WinRateEntity addMaster(UserEntity user) {
         var rate = getOrNewWinRate(user);
-        rate.setMafiaMaster(rate.getMafiaMaster()+1);
+        rate.setMafiaMaster(Optional.ofNullable(rate.getMafiaMaster()).orElse(0L)+1);
         return winRateRepository.save(rate);
     }
 }
