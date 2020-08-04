@@ -43,7 +43,9 @@ public class WinRateEntity {
     ;
     @Getter(onMethod_ = {@Basic, @Column(name = "MAFIA_MISS")})
     private Long mafiaMiss = 0L;
-    ;
+
+    @Getter(onMethod_ = {@Basic, @Column(name = "MAFIA_MASTER")})
+    private Long mafiaMaster = 0L;
 
     @Override
     public boolean equals(Object o) {
@@ -68,6 +70,16 @@ public class WinRateEntity {
     public Long totalMafiaGames() {
         return mafiaLoseBlack + mafiaLoseDon + mafiaLoseRed + mafiaLoseSheriff + mafiaWinBlack + mafiaWinDon
                 + mafiaWinRed + mafiaWinSheriff;
+    }
+
+    @Transient
+    public Long totalMafiaWins() {
+        return mafiaWinBlack + mafiaWinDon + mafiaWinRed + mafiaWinSheriff;
+    }
+
+    @Transient
+    public Long totalMafiaLose() {
+        return mafiaLoseBlack + mafiaLoseDon + mafiaLoseRed + mafiaLoseSheriff;
     }
 
     @Override

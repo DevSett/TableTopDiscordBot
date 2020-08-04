@@ -83,6 +83,7 @@ public class RangService {
                 + "\n:detective: Комисар:"
                 + "\n:woman_vampire: Дон:"
                 + "\n:slot_machine: Лучший ход:"
+                + "\n:game_die: Провел игр:"
                 + "\n:military_medal: Общий винрейт:"
                 + "\n:chart_with_upwards_trend: Кол-во игр:", true)
         );
@@ -91,6 +92,7 @@ public class RangService {
                 + "\n" + winRate.getMafiaWinSheriff() + "/" + winRate.getMafiaLoseSheriff()
                 + "\n" + winRate.getMafiaWinDon() + "/" + winRate.getMafiaLoseDon()
                 + "\n" + winRate.getMafiaFind() + "/" + winRate.getMafiaMiss()
+                + "\n" + winRate.getMafiaMaster()
                 + "\n"
                 + "\n" + winRate.totalMafiaGames(), true));
 
@@ -99,7 +101,7 @@ public class RangService {
                 + "\n" + winRateService.getWinRateSheriff(winRate) + "%"
                 + "\n" + winRateService.getWinRateDon(winRate) + "%"
                 + "\n" + winRateService.getWinRateBest(winRate) + "%"
-                + "\n" + ((winRateService.getWinRateRed(winRate) + winRateService.getWinRateBlack(winRate)) / 2) + "%"
+                + "\n" + winRateService.getTotalRate(winRate) + "%"
                 , true));
 
 
@@ -119,7 +121,7 @@ public class RangService {
             list.stream().forEach(rate -> {
                 names.add("<@!" + rate.getUserEntity().getId() + ">");
                 totals.add(rate.totalMafiaGames() + "");
-                winRate.add(((winRateService.getWinRateRed(rate) + winRateService.getWinRateBlack(rate)) / 2) + "%");
+                winRate.add((winRateService.getTotalRate(rate) + "%"));
             });
 
             fields.add(new Field(":detective: Игрок", String.join("\n", names), true));

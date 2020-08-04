@@ -34,6 +34,14 @@ public class WinRateService {
                 .limit(10).collect(Collectors.toList());
     }
 
+    public Long getTotalRate(WinRateEntity winRate) {
+       var winRateR = winRate.totalMafiaWins() != 0 && winRate.totalMafiaLose() != 0
+                ? ((double) winRate.totalMafiaWins() / (winRate.totalMafiaLose() + winRate.totalMafiaWins()))
+                : winRate.totalMafiaWins();
+
+        return Long.valueOf((long) (winRateR * 100 > 100 ? 100 : winRateR * 100));
+    }
+
     public Long getWinRateRed(WinRateEntity winRate) {
         var totalRedWin = winRate.getMafiaWinRed() + winRate.getMafiaWinSheriff();
         var totalRedLose = winRate.getMafiaLoseRed() + winRate.getMafiaLoseSheriff();
@@ -135,6 +143,12 @@ public class WinRateService {
     public WinRateEntity addMiss(UserEntity user, Integer count) {
         var rate = getOrNewWinRate(user);
         rate.setMafiaMiss(rate.getMafiaMiss() + count);
+        return winRateRepository.save(rate);
+    }
+
+    public WinRateEntity addMaster(UserEntity user) {
+        var rate = getOrNewWinRate(user);
+        rate.setMafiaMaster(rate.getMafiaMaster()+1);
         return winRateRepository.save(rate);
     }
 }

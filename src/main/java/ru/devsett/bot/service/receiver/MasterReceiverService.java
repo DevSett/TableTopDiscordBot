@@ -86,7 +86,7 @@ public class MasterReceiverService {
                         "катастрофа - выдача всем новой катастрофы\n" +
                         "грязь %ЮзерНейм игрока% - выдаст всю историю сообщений с игроком у бота (последние 2000 символов)\n" +
                         "телеграм %Любой номер% - токен для синхронизации с телеграмом\n" +
-                        "\nMADE BY KillSett v 0.27";
+                        "\nMADE BY KillSett v 0.28";
 
         var rate = "коины - показывает ваш баланс\n" +
                 "коины %ЮзерНейм% - показывает баланс игрока\n" +
@@ -104,15 +104,16 @@ public class MasterReceiverService {
                     + "адд-коины %юзернейм% %кол-во%\n"
                     + "хайдбан %юзернейм% %кол-в часово%\n"
                     + "хайдфастбан %Начала никнейма который сидит в вашем войсе% %Кол-во часов%\n"
-                    + "в-красные %теги игроков через запятую% - зачисление статистики красным\n"
-                    + "в-черные %теги игроков через запятую% - зачисление статистики черным\n"
-                    + "п-красные %теги игроков через запятую% - зачисление статистики красным\n"
-                    + "п-черные %теги игроков через запятую% - зачисление статистики черным\n"
-                    + "в-дон %теги игроков через запятую% - зачисление статистики дону\n"
-                    + "п-дон %теги игроков через запятую% - зачисление статистики дону\n"
-                    + "п-шериф %теги игроков через запятую% - зачисление статистики шерифу\n"
+                    + "в-красные %теги игроков через пробел% - зачисление статистики красным\n"
+                    + "в-черные %теги игроков через пробел% - зачисление статистики черным\n"
+                    + "п-красные %теги игроков через пробел% - зачисление статистики красным\n"
+                    + "п-черные %теги игроков через пробел% - зачисление статистики черным\n"
+                    + "в-дон %теги игроков через пробел% - зачисление статистики дону\n"
+                    + "п-дон %теги игроков через пробел% - зачисление статистики дону\n"
+                    + "п-шериф %теги игроков через пробел% - зачисление статистики шерифу\n"
                     + "в-ход %теги игроков через запятую% %кол-во% - зачисление статистики дону\n"
-                    + "в-шериф %теги игроков через запятую% - зачисление статистики шерифу\n"
+                    + "в-ведущий %теги игроков через пробел%"
+                    + "в-шериф %теги игроков через пробел% - зачисление статистики шерифу\n"
                      + "п-ход %теги игроков через запятую% %кол-во% - зачисление статистики дону";
 
             discordService.sendChatEmbed(event, "ДЛЯ МОДЕРАТОРОВ", msgHelp2, "https://github.com/DevSett/TableTopDiscordBot");
@@ -148,6 +149,37 @@ public class MasterReceiverService {
             }
         }
     }
+    @CommandName(names = {"в-ведущий"})
+    public void addMaster(MessageCreateEvent event, String command) {
+        if (!discordService.isPresentRole(event, Role.MASTER)) {
+            return;
+        }
+
+        var spl = command.split(" ");
+        if (spl.length < 2) {
+            throw new DiscordException("Некорректно введена команда!");
+        }
+        for (int i = 1; i < spl.length; i++) {
+            var player = spl[i];
+            var id = getId(player);
+            var user = userService.findById(id);
+            if (user == null) {
+                var member = MafiaBot.getGuild().getMemberById(Snowflake.of(id)).blockOptional();
+                if (member.isPresent()) {
+                    user = userService.getOrNewUser(member.get());
+                }
+            }
+
+            if (user == null) {
+                discordService.sendChat(event, "Пользователь " + player + " не найден!");
+            } else {
+                var rate = winRateService.addMaster(user);
+                discordService.sendChatEmbed(event, "Кол-во выйгранных игр за дона " + user.getUserName(), rate.getMafiaMaster() + "", null);
+            }
+        }
+
+    }
+
 
     @CommandName(names = {"в-ход"})
     public void addBest(MessageCreateEvent event, String command) {
@@ -189,8 +221,8 @@ public class MasterReceiverService {
         if (spl.length < 2) {
             throw new DiscordException("Некорректно введена команда!");
         }
-        var players = spl[1].split(",");
-        for (String player : players) {
+        for (int i = 1; i < spl.length; i++) {
+            var player = spl[i];
             var id = getId(player);
             var user = userService.findById(id);
             if (user == null) {
@@ -207,6 +239,7 @@ public class MasterReceiverService {
                 discordService.sendChatEmbed(event, "Кол-во выйгранных игр за дона " + user.getUserName(), rate.getMafiaWinDon() + "", null);
             }
         }
+
     }
 
     @CommandName(names = {"п-дон"})
@@ -219,8 +252,8 @@ public class MasterReceiverService {
         if (spl.length < 2) {
             throw new DiscordException("Некорректно введена команда!");
         }
-        var players = spl[1].split(",");
-        for (String player : players) {
+        for (int i = 1; i < spl.length; i++) {
+            var player = spl[i];
             var id = getId(player);
             var user = userService.findById(id);
             if (user == null) {
@@ -249,8 +282,8 @@ public class MasterReceiverService {
         if (spl.length < 2) {
             throw new DiscordException("Некорректно введена команда!");
         }
-        var players = spl[1].split(",");
-        for (String player : players) {
+        for (int i = 1; i < spl.length; i++) {
+            var player = spl[i];
             var id = getId(player);
             var user = userService.findById(id);
             if (user == null) {
@@ -279,8 +312,8 @@ public class MasterReceiverService {
         if (spl.length < 2) {
             throw new DiscordException("Некорректно введена команда!");
         }
-        var players = spl[1].split(",");
-        for (String player : players) {
+        for (int i = 1; i < spl.length; i++) {
+            var player = spl[i];
             var id = getId(player);
             var user = userService.findById(id);
             if (user == null) {
@@ -309,8 +342,8 @@ public class MasterReceiverService {
         if (spl.length < 2) {
             throw new DiscordException("Некорректно введена команда!");
         }
-        var players = spl[1].split(",");
-        for (String player : players) {
+        for (int i = 1; i < spl.length; i++) {
+            var player = spl[i];
             var id = getId(player);
             var user = userService.findById(id);
             if (user == null) {
@@ -339,8 +372,8 @@ public class MasterReceiverService {
         if (spl.length < 2) {
             throw new DiscordException("Некорректно введена команда!");
         }
-        var players = spl[1].split(",");
-        for (String player : players) {
+        for (int i = 1; i < spl.length; i++) {
+            var player = spl[i];
             var id = getId(player);
             var user = userService.findById(id);
             if (user == null) {
@@ -369,8 +402,8 @@ public class MasterReceiverService {
         if (spl.length < 2) {
             throw new DiscordException("Некорректно введена команда!");
         }
-        var players = spl[1].split(",");
-        for (String player : players) {
+        for (int i = 1; i < spl.length; i++) {
+            var player = spl[i];
             var id = getId(player);
             var user = userService.findById(id);
             if (user == null) {
@@ -399,8 +432,8 @@ public class MasterReceiverService {
         if (spl.length < 2) {
             throw new DiscordException("Некорректно введена команда!");
         }
-        var players = spl[1].split(",");
-        for (String player : players) {
+        for (int i = 1; i < spl.length; i++) {
+            var player = spl[i];
             var id = getId(player);
             var user = userService.findById(id);
             if (user == null) {
@@ -424,6 +457,7 @@ public class MasterReceiverService {
         discordService.sendChatEmbed(event, "Топ игроков в мафию",
                 null, null,rangService.getTopWinRate());
     }
+
 
     @CommandName(names = {"винрейт"})
     public void winrate(MessageCreateEvent event, String command) {
