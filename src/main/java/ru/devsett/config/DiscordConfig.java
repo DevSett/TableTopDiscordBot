@@ -1,19 +1,20 @@
 package ru.devsett.config;
 
-import discord4j.core.DiscordClient;
-import discord4j.core.GatewayDiscordClient;
-import discord4j.core.event.domain.message.MessageCreateEvent;
-import discord4j.core.object.entity.Message;
-import discord4j.core.object.entity.channel.MessageChannel;
 import lombok.Getter;
-import lombok.Setter;
+import lombok.extern.log4j.Log4j2;
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.JDABuilder;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import ru.devsett.bot.service.receiver.MessageReceiverService;
+import ru.devsett.bot.service.receiver.VoiceReceiverService;
+
+import javax.security.auth.login.LoginException;
 
 @Configuration()
 @Getter
+@Log4j2
 public class DiscordConfig {
 
     @Value("${discord.token}")
@@ -21,11 +22,16 @@ public class DiscordConfig {
     @Value("${discord.prefix}")
     private String prefix;
 
+
     @Bean
-    public GatewayDiscordClient getGatewayDiscordClient() {
-        final String token = getToken();
-        final DiscordClient client = DiscordClient.create(token);
-        final GatewayDiscordClient gateway = client.login().block();
-        return gateway;
+    public JDA getDiscordClient() {
+        JDA jda = null;
+        try {
+            jda = JDABuilder.createDefault(token)
+                    .build();
+        } catch (LoginException e) {
+            log.error(e);
+        }
+        return jda;
     }
 }

@@ -2,10 +2,11 @@ package ru.devsett.bot.util;
 
 public enum  Role {
     WATCHER("Зритель"),
-    PLAYER("Мафия"),
+    PLAYER("Играет"),
+    SUPPORT("Поддержка"),
     MASTER("Ведущий"),
     MODERATOR("Модератор"),
-    EXPERT("Опытный"),
+    EXPERT("Опытный игрок"),
     BAN("Бан");
 
     private String name;

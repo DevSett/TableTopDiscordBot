@@ -1,16 +1,20 @@
 package ru.devsett.bot.service.receiver;
 
-import discord4j.core.event.domain.VoiceStateUpdateEvent;
-import discord4j.rest.util.Color;
 import lombok.extern.log4j.Log4j2;
+import net.dv8tion.jda.api.events.guild.voice.GuildVoiceJoinEvent;
+import net.dv8tion.jda.api.events.guild.voice.GuildVoiceLeaveEvent;
+import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 import ru.devsett.bot.service.DiscordService;
 import ru.devsett.bot.service.games.RangService;
 
+import java.awt.*;
+
 
 @Service
 @Log4j2
-public class VoiceReceiverService {
+public class VoiceReceiverService extends ListenerAdapter {
 
     private final RangService rangService;
     private final DiscordService discordService;
@@ -20,24 +24,31 @@ public class VoiceReceiverService {
         this.discordService = discordService;
     }
 
-    public void consume(VoiceStateUpdateEvent event) {
+    @Override
+    public void onGuildVoiceJoin(@NotNull GuildVoiceJoinEvent event) {
         try {
-            if (event.getCurrent() != null && event.getOld().isEmpty()) {
-                join(event);
-            }
-            if (event.getCurrent() != null && event.getOld().isPresent()) {
-                swap(event);
-            }
+            join(event);
         } catch (Exception e) {
-            discordService.toLogVoiceChannel("Voice Exception", e.getMessage(), null, Color.RED);
+            discordService.toLogVoiceChannel("Voice Exception", e.getMessage(), event.getMember(),
+                    event.getChannelJoined(), Color.RED.getRGB());
         }
     }
 
-    private void join(VoiceStateUpdateEvent event) {
-        rangService.join(event.getCurrent());
+    @Override
+    public void onGuildVoiceLeave(@NotNull GuildVoiceLeaveEvent event) {
+        try {
+           leave(event);
+        } catch (Exception e) {
+            discordService.toLogVoiceChannel("Voice Exception", e.getMessage(), event.getMember(),
+                    event.getChannelLeft(),  Color.RED.getRGB());
+        }
     }
 
-    private void swap(VoiceStateUpdateEvent event) {
-        rangService.exit(event.getCurrent(), event.getOld().get());
+    private void join(GuildVoiceJoinEvent event) {
+        rangService.join(event.getMember(), event.getChannelJoined(), event.getChannelLeft());
+    }
+
+    private void leave(GuildVoiceLeaveEvent event) {
+        rangService.exit(event.getMember(), event.getChannelJoined(), event.getChannelLeft());
     }
 }

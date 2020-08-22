@@ -1,7 +1,7 @@
 package ru.devsett.db.service;
 
-import discord4j.core.object.entity.Member;
-import discord4j.rest.util.Color;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Role;
 import org.springframework.stereotype.Service;
 import ru.devsett.bot.service.DiscordService;
 import ru.devsett.bot.util.DiscordException;
@@ -30,16 +30,16 @@ public class UserService {
             throw new DiscordException("Не найден пользователь!");
         }
 
-        var user = findById(member.getId().asLong());
+        var user = findById(member.getIdLong());
         if (user == null) {
-            user = findByUserName(member.getUsername());
+            user = findByUserName(user.getUserName());
         }
         if (user == null) {
             user = new UserEntity();
-            user.setId(member.getId().asLong());
+            user.setId(member.getIdLong());
         }
-        user.setUserName(member.getUsername());
-        user.setNickName(member.getNickname().orElse(member.getDisplayName()));
+        user.setUserName(user.getUserName());
+        user.setNickName(user.getNickName());
         return userRepository.save(user);
     }
 
@@ -61,8 +61,8 @@ public class UserService {
         user.setRating(raite == null ? 0 : user.getRating() + plus);
 
         var desc = ":moneybag: Для игрока <@!" + user.getId() + "> начислено " + plus + " мафкоинов от " + from;
-        discordService.toLog("Мафкоины", "Новый баланс: " + user.getRating(), desc, Color.SEA_GREEN);
-
+        discordService.toLog("Мафкоины", "Новый баланс: " + user.getRating(), desc, Role.DEFAULT_COLOR_RAW);
+//TODO
         return userRepository.save(user);
     }
 

@@ -1,7 +1,7 @@
 package ru.devsett.bot.service.games;
 
-import discord4j.core.object.Embed;
-import discord4j.core.object.VoiceState;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.VoiceChannel;
 import org.springframework.stereotype.Service;
 import ru.devsett.bot.service.DiscordService;
 import ru.devsett.bot.util.DiscordException;
@@ -13,10 +13,8 @@ import ru.devsett.db.service.UserService;
 import ru.devsett.db.service.WatchmanService;
 import ru.devsett.db.service.WinRateService;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class RangService {
@@ -35,26 +33,20 @@ public class RangService {
         this.winRateService = winRateService;
     }
 
-    public void join(VoiceState current) {
-        var user = userService.getOrNewUser(current.getMember().block());
-        var channel = current.getChannel().block();
-        var channelEntity = channelService.getOrNewChannel(channel.getName(), channel.getId().asLong(), true);
+    public void join(Member member, VoiceChannel current, VoiceChannel old) {
+        var user = userService.getOrNewUser(member);
+        var channelEntity = channelService.getOrNewChannel(current.getName(), current.getIdLong(), true);
         watchmanService.join(channelEntity, user, System.currentTimeMillis());
     }
 
-    public void exit(VoiceState current, VoiceState old) {
-        var member = current.getMember().block();
-        if (member == null) {
-            member = old.getMember().block();
-        }
+    public void exit(Member member, VoiceChannel current, VoiceChannel old) {
         var user = userService.getOrNewUser(member);
-        var channel = old.getChannel().block();
-        var channelEntity = channelService.getOrNewChannel(channel.getName(), channel.getId().asLong(), true);
+        var channelEntity = channelService.getOrNewChannel(old.getName(), old.getIdLong(), true);
         var watchman = watchmanService.exit(channelEntity, user, System.currentTimeMillis());
-        var channelNew = current.getChannel().block();
-        if (channelNew != null) {
-            join(current);
+        if (current != null) {
+            join(member, current, old);
         }
+
         if (watchman != null) {
             var timeSec = (watchman.getExitTime().getTime() - watchman.getJoinTime().getTime()) / 1000;
             var raite = (timeSec * 0.004);

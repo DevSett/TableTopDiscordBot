@@ -1,12 +1,11 @@
 package ru.devsett.bot.service.receiver;
 
-import discord4j.core.event.domain.message.MessageCreateEvent;
-import discord4j.core.object.entity.Message;
-import discord4j.core.object.entity.channel.TextChannel;
-import discord4j.rest.http.client.ClientException;
-import discord4j.rest.util.Color;
-import io.netty.handler.codec.http.HttpResponseStatus;
 import lombok.extern.log4j.Log4j2;
+import net.dv8tion.jda.api.entities.ChannelType;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 import ru.devsett.bot.intefaces.CommandName;
 import ru.devsett.bot.service.DiscordService;
@@ -14,9 +13,7 @@ import ru.devsett.bot.util.DiscordException;
 import ru.devsett.config.DiscordConfig;
 import ru.devsett.db.service.UserService;
 
-
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.awt.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -24,7 +21,7 @@ import java.util.stream.Stream;
 
 @Service
 @Log4j2
-public class MessageReceiverService {
+public class MessageReceiverService extends ListenerAdapter {
 
     private final DiscordConfig discordConfig;
     private final DiscordService discordService;
@@ -44,24 +41,31 @@ public class MessageReceiverService {
         this.userService = userService;
     }
 
-    public void consume(MessageCreateEvent event) {
+    @Override
+    public void onMessageReceived(@NotNull MessageReceivedEvent event) {
+    }
+
+    public void consume(MessageReceivedEvent event) {
         try {
+            if (event.isFromType(ChannelType.PRIVATE)) {
+                return;
+            }
             Message message = event.getMessage();
-            String content = message.getContent();
+            String content = message.getContentDisplay();
+
             if (content.startsWith(discordConfig.getPrefix())
                     && content.length() > 2
-                    && event.getMember().isPresent()
-                    && !event.getMember().get().isBot()) {
+                    && !event.getAuthor().isBot()) {
                 reflectInvoke(event, content);
             }
             bump(event, content);
         } catch (Exception e) {
-            discordService.toLogTextChannel("Message Exception", e.getMessage(), event, Color.RED);
+            discordService.toLogTextChannel("Message Exception", e.getMessage(), event, Color.RED.getRGB());
         }
     }
 
-    private void bump(MessageCreateEvent event, String content) {
-        if (event.getMember().isEmpty()) {
+    private void bump(MessageReceivedEvent event, String content) {
+        if (event.getAuthor() == null) {
             return;
         }
         if (isServerMonitoring(event)) {
@@ -72,7 +76,7 @@ public class MessageReceiverService {
             if (emb.getDescription().isEmpty()) {
                 return;
             }
-            var desc = emb.getDescription().get();
+            var desc = emb.getDescription();
             if (desc.contains("Server bumped by") && desc.contains("<") && desc.contains(">")) {
                 var user = userService.findById(Long.parseLong(desc.substring(desc.indexOf("<") + 2, desc.indexOf(">"))));
                 if (user != null) {
@@ -80,19 +84,19 @@ public class MessageReceiverService {
                 }
             }
         } else {
-            if (!event.getMember().get().isBot() && content.equals("!bump")) {
-                userService.getOrNewUser(event.getMember().get());
+            if (!event.getAuthor().isBot() && content.equals("!bump")) {
+                userService.getOrNewUser(event.getMember());
             }
         }
     }
 
-    private boolean isServerMonitoring(MessageCreateEvent event) {
-        return event.getMember().get().isBot()
-                && event.getMember().get().getDisplayName().equals("Server Monitoring");
+    private boolean isServerMonitoring(MessageReceivedEvent event) {
+        return event.getAuthor().isBot()
+                && event.getAuthor().getName().equals("Server Monitoring");
     }
 
 
-    private void reflectInvoke(MessageCreateEvent event, String content) {
+    private void reflectInvoke(MessageReceivedEvent event, String content) {
         var command = content.substring(discordConfig.getPrefix().length(), content.contains(" ") ? content.indexOf(" ") : content.length()).trim();
         var findMethod = getMethodStream(MasterReceiverService.class, command).findFirst();
         var secondMethod = getMethodStream(BunkerReceiverService.class, command).findFirst();
@@ -105,7 +109,7 @@ public class MessageReceiverService {
         });
     }
 
-    private void invoke(MessageCreateEvent event, Object object, String content, Method method) {
+    private void invoke(MessageReceivedEvent event, Object object, String content, Method method) {
         method.setAccessible(true);
         try {
             method.invoke(object, event, content.substring(discordConfig.getPrefix().length()));
@@ -115,16 +119,17 @@ public class MessageReceiverService {
                 DiscordException discordException = (DiscordException) e.getTargetException();
                 discordService.sendChat(event, discordException.getMessage());
             }
-            discordService.toLogTextChannel("Message Exception", e.getTargetException().getMessage(), event, Color.RED);
+            discordService.toLogTextChannel("Message Exception", e.getTargetException().getMessage(), event, Color.RED.getRGB());
             log.error(e);
         } catch (IllegalAccessException e) {
-            discordService.toLogTextChannel("Message Exception", e.getMessage(), event, Color.RED);
+            discordService.toLogTextChannel("Message Exception", e.getMessage(), event, Color.RED.getRGB());
             log.error(e);
         }
     }
 
-    private void tryClientException(MessageCreateEvent event, InvocationTargetException e) {
-        if (e.getTargetException() instanceof ClientException) {
+    private void tryClientException(MessageReceivedEvent event, InvocationTargetException e) {
+     //TODO
+      /*  if (e.getTargetException() instanceof ClientException) {
             ClientException clientException = (ClientException) e.getTargetException();
             if (clientException.getStatus() == HttpResponseStatus.FORBIDDEN) {
                 discordService.sendChat(event, "Недостаточно прав!");
@@ -133,7 +138,7 @@ public class MessageReceiverService {
                 discordService.sendChat(event, "Ошибка выполнения!");
             }
         }
-    }
+   */ }
 
     private Stream<Method> getMethodStream(Class cls, String command) {
         return Arrays.stream(cls.getDeclaredMethods())

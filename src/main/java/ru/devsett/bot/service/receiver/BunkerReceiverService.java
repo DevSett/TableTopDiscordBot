@@ -1,14 +1,12 @@
 package ru.devsett.bot.service.receiver;
 
-import discord4j.core.event.domain.message.MessageCreateEvent;
-import discord4j.core.object.entity.Member;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.springframework.stereotype.Service;
 import ru.devsett.bot.intefaces.CommandName;
 import ru.devsett.bot.service.DiscordService;
 import ru.devsett.bot.service.games.BunkerService;
 import ru.devsett.bot.util.Role;
-import ru.devsett.db.service.MessageService;
-import ru.devsett.db.service.UserService;
 import ru.devsett.game.bunker.Character;
 
 import java.util.List;
@@ -26,7 +24,7 @@ public class BunkerReceiverService {
     }
 
     @CommandName(names = {"новый-игрок"})
-    public void newPlayer(MessageCreateEvent event, String command) {
+    public void newPlayer(MessageReceivedEvent event, String command) {
         if (discordService.isPresentRole(event, Role.MASTER)) {
             String[] commands = command.split(" ");
             var players = discordService.getChannelPlayers(event, "Зр.");
@@ -37,7 +35,7 @@ public class BunkerReceiverService {
     }
 
     @CommandName(names = {"бункер"})
-    public void playBunker(MessageCreateEvent event, String command) {
+    public void playBunker(MessageReceivedEvent event, String command) {
         if (discordService.isPresentRole(event, Role.MASTER)) {
             var players = discordService.getChannelPlayers(event, "Зр.");
             discordService.randomOrderPlayers(event, players);
@@ -50,7 +48,7 @@ public class BunkerReceiverService {
     }
 
     @CommandName(names = {"проф"})
-    public void getJobs(MessageCreateEvent event, String command) {
+    public void getJobs(MessageReceivedEvent event, String command) {
         if (discordService.isPresentRole(event, Role.MASTER)) {
             var players = discordService.getChannelPlayers(event, "Зр.");
             String[] commands = command.split(" ");
@@ -61,7 +59,7 @@ public class BunkerReceiverService {
     }
 
     @CommandName(names = {"доп"})
-    public void getAdditionalInformation(MessageCreateEvent event, String command) {
+    public void getAdditionalInformation(MessageReceivedEvent event, String command) {
         if (discordService.isPresentRole(event, Role.MASTER)) {
             var players = discordService.getChannelPlayers(event, "Зр.");
             String[] commands = command.split(" ");
@@ -72,7 +70,7 @@ public class BunkerReceiverService {
     }
 
     @CommandName(names = {"фобия"})
-    public void getPhobia(MessageCreateEvent event, String command) {
+    public void getPhobia(MessageReceivedEvent event, String command) {
         if (discordService.isPresentRole(event, Role.MASTER)) {
             var players = discordService.getChannelPlayers(event, "Зр.");
             String[] commands = command.split(" ");
@@ -83,7 +81,7 @@ public class BunkerReceiverService {
     }
 
     @CommandName(names = {"здоровье", "зд"})
-    public void getHealth(MessageCreateEvent event, String command) {
+    public void getHealth(MessageReceivedEvent event, String command) {
         if (discordService.isPresentRole(event, Role.MASTER)) {
             var players = discordService.getChannelPlayers(event, "Зр.");
             String[] commands = command.split(" ");
@@ -94,7 +92,7 @@ public class BunkerReceiverService {
     }
 
     @CommandName(names = {"багаж"})
-    public void getBaggage(MessageCreateEvent event, String command) {
+    public void getBaggage(MessageReceivedEvent event, String command) {
         if (discordService.isPresentRole(event, Role.MASTER)) {
             var players = discordService.getChannelPlayers(event, "Зр.");
             String[] commands = command.split(" ");
@@ -105,7 +103,7 @@ public class BunkerReceiverService {
     }
 
     @CommandName(names = {"черта"})
-    public void getHumanTraits(MessageCreateEvent event, String command) {
+    public void getHumanTraits(MessageReceivedEvent event, String command) {
         if (discordService.isPresentRole(event, Role.MASTER)) {
             var players = discordService.getChannelPlayers(event, "Зр.");
             String[] commands = command.split(" ");
@@ -116,7 +114,7 @@ public class BunkerReceiverService {
     }
 
     @CommandName(names = {"хобби"})
-    public void getHobbes(MessageCreateEvent event, String command) {
+    public void getHobbes(MessageReceivedEvent event, String command) {
         if (discordService.isPresentRole(event, Role.MASTER)) {
             var players = discordService.getChannelPlayers(event, "Зр.");
             String[] commands = command.split(" ");
@@ -127,7 +125,7 @@ public class BunkerReceiverService {
     }
 
     @CommandName(names = {"персонаж"})
-    public void getMaleAndAge(MessageCreateEvent event, String command) {
+    public void getMaleAndAge(MessageReceivedEvent event, String command) {
         if (discordService.isPresentRole(event, Role.MASTER)) {
             var players = discordService.getChannelPlayers(event, "Зр.");
             String[] commands = command.split(" ");
@@ -138,7 +136,7 @@ public class BunkerReceiverService {
     }
 
     @CommandName(names = {"новый-бункер"})
-    public void getBunker(MessageCreateEvent event, String command) {
+    public void getBunker(MessageReceivedEvent event, String command) {
         if (discordService.isPresentRole(event, Role.MASTER)) {
             var players = discordService.getChannelPlayers(event, "Зр.");
             var bunker = bunkerService.generateBunker();
@@ -149,7 +147,7 @@ public class BunkerReceiverService {
     }
 
     @CommandName(names = {"катастрофа"})
-    public void getDisaster(MessageCreateEvent event, String command) {
+    public void getDisaster(MessageReceivedEvent event, String command) {
         if (discordService.isPresentRole(event, Role.MASTER)) {
             var players = discordService.getChannelPlayers(event, "Зр.");
             var disaster = bunkerService.generateDisaster();
@@ -161,7 +159,7 @@ public class BunkerReceiverService {
 
 
 
-    private void getCharacterStats(MessageCreateEvent event, List<Member> players, String[] commands, String msg, List<String> items) {
+    private void getCharacterStats(MessageReceivedEvent event, List<Member> players, String[] commands, String msg, List<String> items) {
         if (commands.length == 1 || commands[1].equals("all")) {
             for (int i = 0; i < items.size(); i++) {
                 discordService.sendPrivateMessage(event, players.get(i), msg + items.get(i));

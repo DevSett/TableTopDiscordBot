@@ -1,6 +1,6 @@
 package ru.devsett.db.service;
 
-import discord4j.core.object.entity.Member;
+import net.dv8tion.jda.api.entities.Member;
 import org.springframework.stereotype.Service;
 import ru.devsett.db.dto.MessageEntity;
 import ru.devsett.db.repository.MessageRepository;
