@@ -2,9 +2,7 @@ package ru.devsett.bot.service.receiver;
 
 import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
-import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.springframework.stereotype.Service;
 import ru.devsett.bot.MafiaBot;
@@ -12,12 +10,13 @@ import ru.devsett.bot.intefaces.CommandName;
 import ru.devsett.bot.service.DiscordService;
 import ru.devsett.bot.service.games.RangService;
 import ru.devsett.bot.util.DiscordException;
+import ru.devsett.bot.util.Emoji;
 import ru.devsett.bot.util.Role;
+import ru.devsett.config.DiscordConfig;
 import ru.devsett.db.service.MessageService;
 import ru.devsett.db.service.UserService;
 import ru.devsett.db.service.WinRateService;
 
-import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -30,18 +29,29 @@ public class MasterReceiverService {
     private final DiscordService discordService;
     private final RangService rangService;
     private final WinRateService winRateService;
+    private final DiscordConfig discordConfig;
 
     @Getter
     private Member telegramMember;
     @Getter
     private String tokenTelegramSession;
 
-    public MasterReceiverService(MessageService messageService, UserService userService, DiscordService discordService, RangService rangService, WinRateService winRateService) {
+    public MasterReceiverService(MessageService messageService, UserService userService, DiscordService discordService, RangService rangService, WinRateService winRateService, DiscordConfig discordConfig) {
         this.messageService = messageService;
         this.userService = userService;
         this.discordService = discordService;
         this.rangService = rangService;
         this.winRateService = winRateService;
+        this.discordConfig = discordConfig;
+    }
+
+    @CommandName(names = {"создать-в"})
+    public void createMasterChannel(MessageReceivedEvent event, String command) {
+        if (!discordService.isPresentRole(event, Role.MODERATOR)) {
+            return;
+        }
+        discordService.sendChat(event, "Создать классическую мафию", Emoji.GAME);
+        discordService.sendChat(event, "Создать городскую мафию", Emoji.GAME);
     }
 
     @CommandName(names = {"грязь"})
@@ -53,6 +63,11 @@ public class MasterReceiverService {
         }
     }
 
+    @CommandName(names = {"вер"})
+    public void getVersion(MessageReceivedEvent event, String command) {
+       discordService.sendChatEmbed(event,  "Версия: " + discordConfig.getBuildVersion(),
+               " Время сборки: " + discordConfig.getBuildTimestamp(), null);
+    }
 
     @CommandName(names = {"хелп"})
     public void help(MessageReceivedEvent event, String command) {
@@ -85,8 +100,7 @@ public class MasterReceiverService {
                         "новый-игрок %Начала ника игроков через запятую% - выдать нового игрокового персонажа с новыми характеристиками определенным игрокам\n" +
                         "катастрофа - выдача всем новой катастрофы\n" +
                         "грязь %ЮзерНейм игрока% - выдаст всю историю сообщений с игроком у бота (последние 2000 символов)\n" +
-                        "телеграм %Любой номер% - токен для синхронизации с телеграмом\n" +
-                        "\nMADE BY KillSett v 0.29";
+                        "телеграм %Любой номер% - токен для синхронизации с телеграмом";
 
         var rate = "коины - показывает ваш баланс\n" +
                 "коины %ЮзерНейм% - показывает баланс игрока\n" +
@@ -475,100 +489,8 @@ public class MasterReceiverService {
         }
     }
 
-//    @CommandName(names = {"хайдбан"})
-//    public void hideban(MessageReceivedEvent event, String command) {
-//        var spl = command.split(" ");
-//
-//        if (discordService.isPresentRole(event, Role.MODERATOR) && discordService.isPresentPermission(event, Role.MODERATOR, Permission.BAN_MEMBERS)) {
-//            if (spl.length == 2) {
-//                discordService.hideban(event, spl[1], 720);
-//            }
-//            if (spl.length == 3) {
-//                Integer number = -1;
-//                try {
-//                    number = Integer.valueOf(spl[2]);
-//                } catch (Exception e) {
-//                    throw new DiscordException("Введите кол-во часов!");
-//                }
-//                discordService.hideban(event, spl[1], number);
-//            }
-//        }
-//    }
-//
-//    @CommandName(names = {"хайдфастбан"})
-//    public void hidefastban(MessageReceivedEvent event, String command) {
-//        var spl = command.split(" ");
-//
-//        if (discordService.isPresentRole(event, Role.MODERATOR) && discordService.isPresentPermission(event, Role.MODERATOR, Permission.BAN_MEMBERS)) {
-//            if (spl.length == 2) {
-//                discordService.hidefastban(event, spl[1], 720);
-//            }
-//
-//            if (spl.length == 3) {
-//                Integer number = -1;
-//                try {
-//                    number = Integer.valueOf(spl[2]);
-//                } catch (Exception e) {
-//                    throw new DiscordException("Введите кол-во часов!");
-//                }
-//                discordService.hidefastban(event, spl[1], number);
-//            }
-//        }
-//    }
-//
-//    @CommandName(names = {"фастбан"})
-//    public void fastban(MessageReceivedEvent event, String command) {
-//        var spl = command.split(" ");
-//
-//        if (discordService.isPresentRole(event, Role.MODERATOR) && discordService.isPresentPermission(event, Role.MODERATOR, Permission.BAN_MEMBERS)) {
-//            if (spl.length == 3) {
-//                discordService.fastban(event, spl[1], spl[2], 720);
-//            }
-//            if (spl.length == 4) {
-//                Integer number = -1;
-//                try {
-//                    number = Integer.valueOf(spl[3]);
-//                } catch (Exception e) {
-//                    throw new DiscordException("Введите кол-во часов!");
-//                }
-//                discordService.fastban(event, spl[1], spl[2], number);
-//            }
-//        }
-//    }
-
-//    @CommandName(names = {"бан"})
-//    public void ban(MessageReceivedEvent event, String command) {
-//        var spl = command.split(" ");
-//
-//        if (discordService.isPresentRole(event, Role.MODERATOR) && discordService.isPresentPermission(event, Role.MODERATOR, Permission.BAN_MEMBERS)) {
-//            if (spl.length == 3) {
-//                discordService.ban(event, spl[1], spl[2], 720);
-//            }
-//            if (spl.length == 4) {
-//                Integer number = -1;
-//                try {
-//                    number = Integer.valueOf(spl[3]);
-//                } catch (Exception e) {
-//                    throw new DiscordException("Введите кол-во часов!");
-//                }
-//                discordService.ban(event, spl[1], spl[2], number);
-//            }
-//        }
-//    }
-//
-//    @CommandName(names = {"анбан"})
-//    public void unban(MessageReceivedEvent event, String command) {
-//        var spl = command.split(" ");
-//
-//        if (discordService.isPresentRole(event, Role.MODERATOR) && discordService.isPresentPermission(event, Role.MODERATOR, Permission.BAN_MEMBERS)) {
-//            if (spl.length == 2) {
-//                discordService.unban(event, spl[1]);
-//            }
-//        }
-//    }
-
     @CommandName(names = {"коины"})
-    public void raite(MessageReceivedEvent event, String command) {
+    public void rate(MessageReceivedEvent event, String command) {
         var spl = command.split(" ");
         if (spl.length == 1) {
             discordService.sendChatEmbed(event, "Ваш баланс",

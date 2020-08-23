@@ -1,7 +1,5 @@
 package ru.devsett.config;
 
-import discord4j.core.DiscordClient;
-import discord4j.core.GatewayDiscordClient;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

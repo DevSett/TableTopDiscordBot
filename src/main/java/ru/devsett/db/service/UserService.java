@@ -32,14 +32,14 @@ public class UserService {
 
         var user = findById(member.getIdLong());
         if (user == null) {
-            user = findByUserName(user.getUserName());
+            user = findByUserName(member.getUser().getName());
         }
         if (user == null) {
             user = new UserEntity();
             user.setId(member.getIdLong());
         }
-        user.setUserName(user.getUserName());
-        user.setNickName(user.getNickName());
+        user.setUserName(member.getUser().getName());
+        user.setNickName(member.getEffectiveName());
         return userRepository.save(user);
     }
 
@@ -62,7 +62,6 @@ public class UserService {
 
         var desc = ":moneybag: Для игрока <@!" + user.getId() + "> начислено " + plus + " мафкоинов от " + from;
         discordService.toLog("Мафкоины", "Новый баланс: " + user.getRating(), desc, Role.DEFAULT_COLOR_RAW);
-//TODO
         return userRepository.save(user);
     }
 

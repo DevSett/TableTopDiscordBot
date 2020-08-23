@@ -22,6 +22,14 @@ public class DiscordConfig {
     @Value("${discord.prefix}")
     private String prefix;
 
+    @Value("${application.name}")
+    private String applicationName;
+
+    @Value("${build.version}")
+    private String buildVersion;
+
+    @Value("${build.timestamp}")
+    private String buildTimestamp;
 
     @Bean
     public JDA getDiscordClient() {

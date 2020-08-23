@@ -43,6 +43,7 @@ public class MessageReceiverService extends ListenerAdapter {
 
     @Override
     public void onMessageReceived(@NotNull MessageReceivedEvent event) {
+        consume(event);
     }
 
     public void consume(MessageReceivedEvent event) {
@@ -51,7 +52,7 @@ public class MessageReceiverService extends ListenerAdapter {
                 return;
             }
             Message message = event.getMessage();
-            String content = message.getContentDisplay();
+            String content = message.getContentRaw();
 
             if (content.startsWith(discordConfig.getPrefix())
                     && content.length() > 2
@@ -86,7 +87,7 @@ public class MessageReceiverService extends ListenerAdapter {
         } else {
             if (!event.getAuthor().isBot() && content.equals("!bump")) {
                 userService.getOrNewUser(event.getMember());
-            }
+          }
         }
     }
 
@@ -114,7 +115,6 @@ public class MessageReceiverService extends ListenerAdapter {
         try {
             method.invoke(object, event, content.substring(discordConfig.getPrefix().length()));
         } catch (InvocationTargetException e) {
-            tryClientException(event, e);
             if (e.getTargetException() instanceof DiscordException) {
                 DiscordException discordException = (DiscordException) e.getTargetException();
                 discordService.sendChat(event, discordException.getMessage());
@@ -126,19 +126,6 @@ public class MessageReceiverService extends ListenerAdapter {
             log.error(e);
         }
     }
-
-    private void tryClientException(MessageReceivedEvent event, InvocationTargetException e) {
-     //TODO
-      /*  if (e.getTargetException() instanceof ClientException) {
-            ClientException clientException = (ClientException) e.getTargetException();
-            if (clientException.getStatus() == HttpResponseStatus.FORBIDDEN) {
-                discordService.sendChat(event, "Недостаточно прав!");
-            }
-            if (clientException.getStatus() == HttpResponseStatus.BAD_REQUEST) {
-                discordService.sendChat(event, "Ошибка выполнения!");
-            }
-        }
-   */ }
 
     private Stream<Method> getMethodStream(Class cls, String command) {
         return Arrays.stream(cls.getDeclaredMethods())

@@ -6,21 +6,22 @@ import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.exceptions.HierarchyException;
 import org.springframework.stereotype.Service;
 import ru.devsett.bot.MafiaBot;
 import ru.devsett.bot.intefaces.NickNameEvent;
 import ru.devsett.bot.service.games.MafiaService;
 import ru.devsett.bot.service.receiver.MessageReceiverService;
-import ru.devsett.bot.util.ActionDo;
-import ru.devsett.bot.util.DiscordException;
-import ru.devsett.bot.util.Field;
+import ru.devsett.bot.util.*;
 import ru.devsett.bot.util.Role;
 import ru.devsett.db.service.MessageService;
 import ru.devsett.db.service.UserService;
 
+import java.awt.*;
 import java.security.SecureRandom;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
@@ -57,26 +58,29 @@ public class DiscordService {
         var isPresentRole = member.getRoles().stream()
                 .anyMatch(roleDiscord -> quildRole.getId().equals(roleDiscord.getId()));
         if (isPresentRole) {
-            guild.removeRoleFromMember(member, quildRole).queue();
+            guild.removeRoleFromMember(member, quildRole).queue(null, error -> {
+                        toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
+                    });
             return ActionDo.REMOVE;
         } else {
-            guild.addRoleToMember(member, quildRole).queue();
+            guild.addRoleToMember(member, quildRole).queue(null, error -> {
+                        toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
+                    });
             return ActionDo.ADD;
         }
     }
 
     public String changeNickName(MessageReceivedEvent event, Member member, NickNameEvent nickNameEvent) {
         var newNickName = nickNameEvent.getName(getNickName(member));
-//        try {
-            member.modifyNickname(newNickName).queue();
+        try {
+            member.modifyNickname(newNickName).queue(null, error -> {
+                        toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
+                    });
             return newNickName;
-//        } catch (ClientException e) {
-//            TODO
-//            if (e.getStatus() == HttpResponseStatus.FORBIDDEN) {
-//                sendChat(event, "Недостаточно прав для изминения имени на " + newNickName);
-//            }
-//        }
-//        return "";
+        } catch (HierarchyException e) {
+            sendChat(event, "Недостаточно прав для изминения имени на " + newNickName);
+        }
+        return "";
     }
 
     public Boolean isPresentRole(MessageReceivedEvent event, Role... roles) {
@@ -169,23 +173,32 @@ public class DiscordService {
     }
 
     public void sendPrivateMessage(MessageReceivedEvent event, Member member, String msg) {
-//        try {
-            if (msg.length() > 1999) {
-                msg = msg.substring(msg.length() - 1999);
+        if (msg.length() > 1999) {
+            msg = msg.substring(msg.length() - 1999);
+        }
+        String finalMsg = msg;
+        member.getUser().openPrivateChannel().queue(privateChannel -> privateChannel.sendMessage(finalMsg).queue(null, error -> {
+                        toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
+                    }));
+        messageService.sendMessage(member, msg);
+    }
+    public void sendChat(MessageReceivedEvent event, String msg, Emoji... emojis) {
+        event.getChannel().sendMessage(msg).queue(message -> {
+            if (emojis != null && emojis.length > 0) {
+                for (Emoji emoji : emojis) {
+                    message.addReaction(emoji.getName())
+                            .queue(null, error -> {
+                                toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
+                    });
+                }
             }
-            String finalMsg = msg;
-            member.getUser().openPrivateChannel().queue(privateChannel -> privateChannel.sendMessage(finalMsg).queue());
-            messageService.sendMessage(member, msg);
-//        } catch (ClientException e) {
-//            //TODO
-//            if (e.getStatus() == HttpResponseStatus.FORBIDDEN) {
-//                sendChat(event, "Недостаточно прав для отправки сообщения для пользователя " + member.getUsername());
-//            }
-//        }
+        });
     }
 
-    public void sendChat(MessageReceivedEvent event, String s) {
-        event.getChannel().sendMessage(s).queue();
+    public void sendChat(MessageReceivedEvent event, String msg) {
+        event.getChannel().sendMessage(msg).queue(null, error -> {
+                        toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
+                    });
     }
 
     public Member getPlayerByStartsWithNick(List<Member> members, String nick) {
@@ -195,25 +208,39 @@ public class DiscordService {
 
     public void unmuteall(MessageReceivedEvent telegramSession) {
         getChannelPlayers(telegramSession).forEach(player -> {
-            player.mute(false).queue();
+            player.mute(false).queue(null, error -> {
+                        toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
+                    });
         });
     }
 
     public void muteall(MessageReceivedEvent telegramSession) {
         getChannelPlayers(telegramSession).forEach(player -> {
-            player.mute(true).queue();
+            if (player != telegramSession.getMember()) {
+                player.mute(true).queue(null, error -> {
+                        toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
+                    });
+            }
         });
     }
 
-    public void muteall(VoiceChannel channel) {
-        getChannelPlayers(channel).forEach(player -> {
-            player.mute(true).queue();
+    public void muteall(Member member) {
+        getChannelPlayers(member.getVoiceState().getChannel()).forEach(player -> {
+            if (player != member) {
+                player.mute(true).queue(null, error -> {
+                        toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
+                    });
+            }
         });
     }
 
-    public void unmuteall(VoiceChannel channel) {
-        getChannelPlayers(channel).forEach(player -> {
-            player.mute(false).queue();
+    public void unmuteall(Member member) {
+        getChannelPlayers(member.getVoiceState().getChannel()).forEach(player -> {
+            if (player != member) {
+                player.mute(false).queue(null, error -> {
+                        toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
+                    });
+            }
         });
     }
 
@@ -222,76 +249,16 @@ public class DiscordService {
     }
 
     public void sendChatEmbed(MessageReceivedEvent event, String title, String msgHelp, String url, List<Field> fields) {
-        var embBuilder = new EmbedBuilder().setTitle(title,url).setDescription(msgHelp);
-        if (fields!= null && !fields.isEmpty()) {
+        var embBuilder = new EmbedBuilder().setTitle(title, url).setDescription(msgHelp);
+        if (fields != null && !fields.isEmpty()) {
             for (Field field : fields) {
                 embBuilder.addField(field.getName(), field.getValue(), field.isInline());
             }
         }
-        event.getMessage().getChannel().sendMessage(embBuilder.build()).queue();
+        event.getMessage().getChannel().sendMessage(embBuilder.build()).queue(null, error -> {
+                        toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
+                    });
     }
-//
-//    public void ban(MessageReceivedEvent event, memberId userName, String reason, int hours) {
-//        var findedMember = event.getGuild().getMemberBygetMembers().stream().filter(member -> member.getUsername().equals(userName)).blockFirst();
-//        if (findedMember == null) {
-//            throw new DiscordException("Пользователь не найден!");
-//        } else {
-//            userService.ban(findedMember, event.getMember().get(), hours);
-//            var days = Math.min(7, hours / 24);
-//            findedMember.ban(spec -> spec.setReason(reason).setDeleteMessageDays(days)).block();
-//            sendChat(event, "Выдан бан!");
-//        }
-//    }
-//
-//    public void hideban(MessageReceivedEvent event, String userName, int hours) {
-//        var findedMember = event.getGuild().block().getMembers().filter(member -> member.getUsername().equals(userName)).blockFirst();
-//        if (findedMember == null) {
-//            throw new DiscordException("Пользователь не найден!");
-//        } else {
-//            userService.ban(findedMember, event.getMember().get(), hours);
-//            addOrRemoveRole(event.getGuild().block(), Optional.ofNullable(findedMember), Role.BAN);
-//            sendChat(event, "Выдан бан!");
-//        }
-//    }
-//
-//    public void fastban(MessageReceivedEvent event, String name, String reason, int hours) {
-//        var member = getPlayerByStartsWithNick(getChannelPlayers(event), name);
-//        userService.ban(member, event.getMember().get(), hours);
-//        var days = Math.min(7, hours / 24);
-//        member.ban(spec -> spec.setReason(reason).setDeleteMessageDays(days <= 1 ? 1 : days)).block();
-//    }
-//
-//    public void hidefastban(MessageReceivedEvent event, String name, int hours) {
-//        var member = getPlayerByStartsWithNick(getChannelPlayers(event), name);
-//        userService.ban(member, event.getMember().get(), hours);
-//        addOrRemoveRole(event.getGuild().block(), Optional.ofNullable(member), Role.BAN);
-//    }
-//
-//    public void unban(MessageReceivedEvent event, String userName) {
-//        var findedMember = event.getGuild().block().getBans().filter(
-//                ban -> ban.getUser().getUsername().equals(userName)).blockFirst();
-//
-//        var user = userService.findByUserName(userName);
-//        Member member = null;
-//        if (user != null) {
-//            member = event.getGuild().block().getMemberById(Snowflake.of(user.getId())).block();
-//        }
-//        if (findedMember == null && member == null) {
-//            throw new DiscordException("Пользователь не найден!");
-//        } else {
-//            if (findedMember != null) {
-//                userService.unban(userService.findById(findedMember.getUser().getId().asLong()));
-//                addOrRemoveRole(event.getGuild().block(),
-//                        Optional.ofNullable(findedMember.getUser().asMember(event.getGuildId().get()).block()), Role.BAN);
-//                event.getGuild().block().unban(Snowflake.of(findedMember.getUser().getId().asLong())).block();
-//            } else {
-//                userService.unban(userService.findById(member.getId().asLong()));
-//                addOrRemoveRole(event.getGuild().block(), Optional.ofNullable(member), Role.BAN);
-//            }
-//            sendChat(event, "Выпущен из клетки!");
-//
-//        }
-//    }
 
     public void toLogTextChannel(String title, String description, MessageReceivedEvent event, int color) {
         var name = "Неизвестно";
@@ -341,7 +308,9 @@ public class DiscordService {
                     .setFooter(footer)
                     .setColor(color);
 
-            textChannel.sendMessage(builder.build()).queue();
+            textChannel.sendMessage(builder.build()).queue(null, error -> {
+                        toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
+                    });
         } catch (Exception e2) {
             log.error(e2);
         }

@@ -43,13 +43,10 @@ public class RangService {
         var user = userService.getOrNewUser(member);
         var channelEntity = channelService.getOrNewChannel(old.getName(), old.getIdLong(), true);
         var watchman = watchmanService.exit(channelEntity, user, System.currentTimeMillis());
-        if (current != null) {
-            join(member, current, old);
-        }
 
         if (watchman != null) {
             var timeSec = (watchman.getExitTime().getTime() - watchman.getJoinTime().getTime()) / 1000;
-            var raite = (timeSec * 0.004);
+            var raite = (timeSec * 4.004);
             raite = raite > 116 ? 116 : (int) raite;
             if (raite >= 1) {
                 userService.addRating(user, (int) raite, "Watchman", discordService);

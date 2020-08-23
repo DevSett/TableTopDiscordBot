@@ -6,13 +6,27 @@
 
     <groupId>org.example</groupId>
     <artifactId>MafiaBot</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0</version>
 
     <properties>
         <java.version>14</java.version>
+        <timestamp>${maven.build.timestamp}</timestamp>
+        <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
     </properties>
 
+    <repositories>
+        <repository>
+            <id>jcenter</id>
+            <name>jcenter-bintray</name>
+            <url>https://jcenter.bintray.com</url>
+        </repository>
+    </repositories>
     <dependencies>
+        <dependency>
+            <groupId>net.dv8tion</groupId>
+            <artifactId>JDA</artifactId>
+            <version>4.2.0_168</version>
+        </dependency>
         <dependency>
             <groupId>org.telegram</groupId>
             <artifactId>telegrambots-spring-boot-starter</artifactId>
@@ -27,11 +41,6 @@
             <groupId>org.telegram</groupId>
             <artifactId>telegrambots</artifactId>
             <version>4.9</version>
-        </dependency>
-        <dependency>
-            <groupId>com.discord4j</groupId>
-            <artifactId>discord4j-core</artifactId>
-            <version>3.1.0.RC3</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -72,6 +81,7 @@
     <build>
         <plugins>
             <plugin>
+
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>

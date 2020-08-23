@@ -1,6 +1,8 @@
 package ru.devsett.bot.service.receiver;
 
 import lombok.extern.log4j.Log4j2;
+import net.dv8tion.jda.api.events.channel.voice.GenericVoiceChannelEvent;
+import net.dv8tion.jda.api.events.channel.voice.update.GenericVoiceChannelUpdateEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceJoinEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceLeaveEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -9,6 +11,7 @@ import org.springframework.stereotype.Service;
 import ru.devsett.bot.service.DiscordService;
 import ru.devsett.bot.service.games.RangService;
 
+import javax.annotation.Nonnull;
 import java.awt.*;
 
 
@@ -29,6 +32,7 @@ public class VoiceReceiverService extends ListenerAdapter {
         try {
             join(event);
         } catch (Exception e) {
+            log.error(e);
             discordService.toLogVoiceChannel("Voice Exception", e.getMessage(), event.getMember(),
                     event.getChannelJoined(), Color.RED.getRGB());
         }
@@ -39,6 +43,7 @@ public class VoiceReceiverService extends ListenerAdapter {
         try {
            leave(event);
         } catch (Exception e) {
+            log.error(e);
             discordService.toLogVoiceChannel("Voice Exception", e.getMessage(), event.getMember(),
                     event.getChannelLeft(),  Color.RED.getRGB());
         }

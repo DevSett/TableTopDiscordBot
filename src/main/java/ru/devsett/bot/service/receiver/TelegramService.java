@@ -46,11 +46,10 @@ public class TelegramService extends TelegramLongPollingBot {
 
         if (message.getChatId().equals(currentIdSession)) {
             if (message.getText().equals(TelegramCommand.MUTE_ALL.getMsg())) {
-                //TODO
-//                discordService.muteall(masterReceiverService.getTelegramMember().getChannel().block());
+                discordService.muteall(masterReceiverService.getTelegramMember());
             }
             if (message.getText().equals(TelegramCommand.UNMUTE_ALL.getMsg())) {
-//                discordService.unmuteall(masterReceiverService.getTelegramMember().getVoiceState().block().getChannel().block());
+                discordService.unmuteall(masterReceiverService.getTelegramMember());
             }
         }
     }
