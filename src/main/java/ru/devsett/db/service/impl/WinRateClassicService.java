@@ -1,9 +1,10 @@
-package ru.devsett.db.service;
+package ru.devsett.db.service.impl;
 
 import org.springframework.stereotype.Service;
 import ru.devsett.db.dto.UserEntity;
 import ru.devsett.db.dto.WinRateClassicEntity;
 import ru.devsett.db.repository.WinRateClassicRepository;
+import ru.devsett.db.service.WinRateInterface;
 
 import java.util.Comparator;
 import java.util.List;
@@ -11,7 +12,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
-public class WinRateClassicService {
+public class WinRateClassicService implements WinRateInterface<WinRateClassicEntity> {
     private final WinRateClassicRepository winRateClassicRepository;
 
     public WinRateClassicService(WinRateClassicRepository winRateClassicRepository) {

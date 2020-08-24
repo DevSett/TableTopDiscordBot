@@ -1,4 +1,4 @@
-package ru.devsett.db.service;
+package ru.devsett.db.service.impl;
 
 import net.dv8tion.jda.api.entities.Member;
 import org.springframework.stereotype.Service;

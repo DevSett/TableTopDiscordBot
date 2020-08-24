@@ -2,24 +2,20 @@ package ru.devsett.bot.service;
 
 import lombok.extern.log4j.Log4j2;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.api.exceptions.HierarchyException;
+import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import org.springframework.stereotype.Service;
 import ru.devsett.bot.MafiaBot;
 import ru.devsett.bot.intefaces.NickNameEvent;
-import ru.devsett.bot.service.games.MafiaService;
-import ru.devsett.bot.service.receiver.MessageReceiverService;
 import ru.devsett.bot.util.*;
 import ru.devsett.bot.util.Role;
-import ru.devsett.db.service.MessageService;
-import ru.devsett.db.service.UserService;
+import ru.devsett.db.service.impl.MessageService;
+import ru.devsett.db.service.impl.UserService;
 
 import java.awt.*;
 import java.security.SecureRandom;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -59,28 +55,23 @@ public class DiscordService {
                 .anyMatch(roleDiscord -> quildRole.getId().equals(roleDiscord.getId()));
         if (isPresentRole) {
             guild.removeRoleFromMember(member, quildRole).queue(null, error -> {
-                        toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
-                    });
+                toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
+            });
             return ActionDo.REMOVE;
         } else {
             guild.addRoleToMember(member, quildRole).queue(null, error -> {
-                        toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
-                    });
+                toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
+            });
             return ActionDo.ADD;
         }
     }
 
-    public String changeNickName(MessageReceivedEvent event, Member member, NickNameEvent nickNameEvent) {
+    public String changeNickName(Member member, NickNameEvent nickNameEvent) {
         var newNickName = nickNameEvent.getName(getNickName(member));
-        try {
-            member.modifyNickname(newNickName).queue(null, error -> {
-                        toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
-                    });
-            return newNickName;
-        } catch (HierarchyException e) {
-            sendChat(event, "Недостаточно прав для изминения имени на " + newNickName);
-        }
-        return "";
+        member.modifyNickname(newNickName).queue(null, error -> {
+            toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
+        });
+        return newNickName;
     }
 
     public Boolean isPresentRole(MessageReceivedEvent event, Role... roles) {
@@ -144,10 +135,10 @@ public class DiscordService {
             var nickName = getNickName(member);
             var newNickName = "";
             if (nickName.length() > 3 && nickName.toCharArray()[2] == '.' && isOrder(nickName.substring(0, 2))) {
-                newNickName = changeNickName(MessageReceivedEvent, member, name -> name.substring(3));
+                newNickName = changeNickName(member, name -> name.substring(3));
             }
             String finalNewNickName = newNickName;
-            changeNickName(MessageReceivedEvent, member, name -> numberString(finalNumber) + (finalNewNickName.isEmpty() ? name : finalNewNickName));
+            changeNickName(member, name -> numberString(finalNumber) + (finalNewNickName.isEmpty() ? name : finalNewNickName));
         }
     }
 
@@ -172,33 +163,47 @@ public class DiscordService {
         return Optional.ofNullable(member.getNickname()).orElse(member.getUser().getName());
     }
 
-    public void sendPrivateMessage(MessageReceivedEvent event, Member member, String msg) {
+    public void sendPrivateMessageEmbed(Member member, String msg) {
+        if (msg.length() > 1999) {
+            msg = msg.substring(msg.length() - 1999);
+        }
+        String finalMsg = msg;
+        member.getUser().openPrivateChannel()
+                .queue(privateChannel -> privateChannel.sendMessage(new EmbedBuilder().setDescription(finalMsg).build())
+                .queue(null, error -> {
+            toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
+        }));
+        messageService.sendMessage(member, msg);
+    }
+
+    public void sendPrivateMessage(Member member, String msg) {
         if (msg.length() > 1999) {
             msg = msg.substring(msg.length() - 1999);
         }
         String finalMsg = msg;
         member.getUser().openPrivateChannel().queue(privateChannel -> privateChannel.sendMessage(finalMsg).queue(null, error -> {
-                        toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
-                    }));
+            toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
+        }));
         messageService.sendMessage(member, msg);
     }
-    public void sendChat(MessageReceivedEvent event, String msg, Emoji... emojis) {
-        event.getChannel().sendMessage(msg).queue(message -> {
+
+    public void sendChat(TextChannel channel, String msg, Emoji... emojis) {
+        channel.sendMessage(msg).queue(message -> {
             if (emojis != null && emojis.length > 0) {
                 for (Emoji emoji : emojis) {
                     message.addReaction(emoji.getName())
                             .queue(null, error -> {
                                 toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
-                    });
+                            });
                 }
             }
         });
     }
 
-    public void sendChat(MessageReceivedEvent event, String msg) {
-        event.getChannel().sendMessage(msg).queue(null, error -> {
-                        toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
-                    });
+    public void sendChat(TextChannel channel, String msg) {
+        channel.sendMessage(msg).queue(null, error -> {
+            toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
+        });
     }
 
     public Member getPlayerByStartsWithNick(List<Member> members, String nick) {
@@ -209,8 +214,8 @@ public class DiscordService {
     public void unmuteall(MessageReceivedEvent telegramSession) {
         getChannelPlayers(telegramSession).forEach(player -> {
             player.mute(false).queue(null, error -> {
-                        toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
-                    });
+                toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
+            });
         });
     }
 
@@ -218,8 +223,8 @@ public class DiscordService {
         getChannelPlayers(telegramSession).forEach(player -> {
             if (player != telegramSession.getMember()) {
                 player.mute(true).queue(null, error -> {
-                        toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
-                    });
+                    toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
+                });
             }
         });
     }
@@ -228,8 +233,8 @@ public class DiscordService {
         getChannelPlayers(member.getVoiceState().getChannel()).forEach(player -> {
             if (player != member) {
                 player.mute(true).queue(null, error -> {
-                        toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
-                    });
+                    toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
+                });
             }
         });
     }
@@ -238,8 +243,8 @@ public class DiscordService {
         getChannelPlayers(member.getVoiceState().getChannel()).forEach(player -> {
             if (player != member) {
                 player.mute(false).queue(null, error -> {
-                        toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
-                    });
+                    toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
+                });
             }
         });
     }
@@ -256,8 +261,8 @@ public class DiscordService {
             }
         }
         event.getMessage().getChannel().sendMessage(embBuilder.build()).queue(null, error -> {
-                        toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
-                    });
+            toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
+        });
     }
 
     public void toLogTextChannel(String title, String description, MessageReceivedEvent event, int color) {
@@ -308,11 +313,84 @@ public class DiscordService {
                     .setFooter(footer)
                     .setColor(color);
 
-            textChannel.sendMessage(builder.build()).queue(null, error -> {
-                        toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
-                    });
+            textChannel.sendMessage(builder.build()).queue();
         } catch (Exception e2) {
             log.error(e2);
+        }
+    }
+
+    public List<Player> randomMafiaGame(MessageReactionAddEvent event) {
+        var memberMsg = event.getMember();
+        var channel = memberMsg.getVoiceState().getChannel();
+        List<Member> membersOrdered = new ArrayList<>();
+
+        for (Member channelMember : channel.getMembers()) {
+            if (!channelMember.getEffectiveName().startsWith("Зр.") && !channelMember.getEffectiveName().startsWith("!")) {
+               if (channelMember != memberMsg) {
+                   membersOrdered.add(channelMember);
+               }
+            }
+        }
+        List<Integer> membersNumbers = new ArrayList<>();
+        List<MafiaRole> roles = new ArrayList<>();
+        if (membersOrdered.size() < 10) {
+            for (int i = 0; i < membersOrdered.size()/3.5; i++) {
+                roles.add(MafiaRole.RED);
+            }
+            for (int i = 0; i < 1; i++) {
+                roles.add(MafiaRole.BLACK);
+            }
+        } else if (membersOrdered.size() < 12){
+            for (int i = 0; i < 6; i++) {
+                roles.add(MafiaRole.RED);
+            }
+            for (int i = 0; i < 2; i++) {
+                roles.add(MafiaRole.BLACK);
+            }
+        } else {
+            for (int i = 0; i < 7; i++) {
+                roles.add(MafiaRole.RED);
+            }
+            for (int i = 0; i < 3; i++) {
+                roles.add(MafiaRole.BLACK);
+            }
+        }
+
+        roles.add(MafiaRole.SHERIFF);
+        roles.add(MafiaRole.DON);
+        var random = new SecureRandom();
+        List<Player>  players = new ArrayList<>();
+        for (Member member : membersOrdered) {
+            var number = random.nextInt(membersOrdered.size()) + 1;
+            while (membersNumbers.contains(number)) {
+                number = random.nextInt(membersOrdered.size()) + 1;
+            }
+            membersNumbers.add(number);
+            int finalNumber = number;
+
+            var nickName = getNickName(member);
+            var newNickName = "";
+            if (nickName.length() > 3 && nickName.toCharArray()[2] == '.' && isOrder(nickName.substring(0, 2))) {
+                newNickName = changeNickName(member, name -> name.substring(3));
+            }
+            String finalNewNickName = newNickName;
+            changeNickName(member, name -> numberString(finalNumber) + (finalNewNickName.isEmpty() ? name : finalNewNickName));
+            var roleIndex = random.nextInt(roles.size());
+            players.add(new Player(userService.getOrNewUser(member), roles.get(roleIndex), finalNumber));
+            roles.remove(roleIndex);
+        }
+        return players;
+    }
+
+    public void deleteOrder(MessageReactionAddEvent event) {
+       var channels =  event.getMember().getVoiceState().getChannel();
+        for (Member member : channels.getMembers()) {
+            var nickName = member.getEffectiveName();
+            if (nickName.length() > 3 && nickName.toCharArray()[2] == '.' && isOrder(nickName.substring(0, 2))) {
+                changeNickName(member, name -> name.substring(3));
+            } else {
+                changeNickName(member, name -> name);
+            }
         }
     }
 }

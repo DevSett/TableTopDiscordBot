@@ -41,8 +41,8 @@ public class BunkerReceiverService {
             discordService.randomOrderPlayers(event, players);
             var bunkerGame = bunkerService.generateGame(players.size());
             for (int index = 0; index < players.size(); index++) {
-                discordService.sendPrivateMessage(event, players.get(index), bunkerGame.toString());
-                discordService.sendPrivateMessage(event, players.get(index), bunkerGame.getCharacterList().get(index).toString());
+                discordService.sendPrivateMessage(players.get(index), bunkerGame.toString());
+                discordService.sendPrivateMessage(players.get(index), bunkerGame.getCharacterList().get(index).toString());
             }
         }
     }
@@ -141,7 +141,7 @@ public class BunkerReceiverService {
             var players = discordService.getChannelPlayers(event, "Зр.");
             var bunker = bunkerService.generateBunker();
             for (Member player : players) {
-                discordService.sendPrivateMessage(event, player, bunker.toStringWithoutDisaster());
+                discordService.sendPrivateMessage(player, bunker.toStringWithoutDisaster());
             }
         }
     }
@@ -152,7 +152,7 @@ public class BunkerReceiverService {
             var players = discordService.getChannelPlayers(event, "Зр.");
             var disaster = bunkerService.generateDisaster();
             for (Member player : players) {
-                discordService.sendPrivateMessage(event, player, ":t_rex: Новый катаклизм: " + disaster);
+                discordService.sendPrivateMessage(player, ":t_rex: Новый катаклизм: " + disaster);
             }
         }
     }
@@ -162,12 +162,12 @@ public class BunkerReceiverService {
     private void getCharacterStats(MessageReceivedEvent event, List<Member> players, String[] commands, String msg, List<String> items) {
         if (commands.length == 1 || commands[1].equals("all")) {
             for (int i = 0; i < items.size(); i++) {
-                discordService.sendPrivateMessage(event, players.get(i), msg + items.get(i));
+                discordService.sendPrivateMessage(players.get(i), msg + items.get(i));
             }
         } else {
             String[] playersSend = commands[1].split(",");
             for (int i = 0; i < playersSend.length; i++) {
-                discordService.sendPrivateMessage(event, discordService.getPlayerByStartsWithNick(players, playersSend[i]), msg + items.get(i));
+                discordService.sendPrivateMessage(discordService.getPlayerByStartsWithNick(players, playersSend[i]), msg + items.get(i));
             }
         }
     }

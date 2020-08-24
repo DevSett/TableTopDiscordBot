@@ -9,4 +9,5 @@ import ru.devsett.db.dto.UserEntity;
 public class Player {
     private UserEntity userEntity;
     private MafiaRole mafiaRole;
+    private int number;
 }

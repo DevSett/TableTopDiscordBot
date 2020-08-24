@@ -1,4 +1,4 @@
-package ru.devsett.db.service;
+package ru.devsett.db.service.impl;
 
 import org.springframework.stereotype.Service;
 import ru.devsett.bot.util.DiscordException;

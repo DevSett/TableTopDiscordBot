@@ -3,6 +3,7 @@ package ru.devsett.bot.service.receiver;
 import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.springframework.stereotype.Service;
 import ru.devsett.bot.MafiaBot;
@@ -13,9 +14,10 @@ import ru.devsett.bot.util.DiscordException;
 import ru.devsett.bot.util.Emoji;
 import ru.devsett.bot.util.Role;
 import ru.devsett.config.DiscordConfig;
-import ru.devsett.db.service.MessageService;
-import ru.devsett.db.service.UserService;
-import ru.devsett.db.service.WinRateService;
+import ru.devsett.db.service.impl.GameHistoryService;
+import ru.devsett.db.service.impl.MessageService;
+import ru.devsett.db.service.impl.UserService;
+import ru.devsett.db.service.impl.WinRateService;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -30,28 +32,38 @@ public class MasterReceiverService {
     private final RangService rangService;
     private final WinRateService winRateService;
     private final DiscordConfig discordConfig;
+    private final GameHistoryService gameHistoryService;
 
     @Getter
     private Member telegramMember;
     @Getter
     private String tokenTelegramSession;
-
-    public MasterReceiverService(MessageService messageService, UserService userService, DiscordService discordService, RangService rangService, WinRateService winRateService, DiscordConfig discordConfig) {
+    @Getter
+    private TextChannel channelMaster;
+    public MasterReceiverService(MessageService messageService, UserService userService, DiscordService discordService, RangService rangService, WinRateService winRateService, DiscordConfig discordConfig, GameHistoryService gameHistoryService) {
         this.messageService = messageService;
         this.userService = userService;
         this.discordService = discordService;
         this.rangService = rangService;
         this.winRateService = winRateService;
         this.discordConfig = discordConfig;
+        this.gameHistoryService = gameHistoryService;
     }
-
+    @CommandName(names = {"clearh"})
+    public void deleateAllHistoryDontStop(MessageReceivedEvent event, String command) {
+        if (!discordService.isPresentRole(event, Role.MODERATOR)) {
+            return;
+        }
+        gameHistoryService.deleteAllStopGames();
+    }
     @CommandName(names = {"создать-в"})
     public void createMasterChannel(MessageReceivedEvent event, String command) {
         if (!discordService.isPresentRole(event, Role.MODERATOR)) {
             return;
         }
-        discordService.sendChat(event, "Создать классическую мафию", Emoji.GAME);
-        discordService.sendChat(event, "Создать городскую мафию", Emoji.GAME);
+        discordService.sendChat(event.getTextChannel(), "Создать классическую мафию", Emoji.GAME);
+        discordService.sendChat(event.getTextChannel(), "Создать городскую мафию", Emoji.GAME);
+        channelMaster = event.getTextChannel();
     }
 
     @CommandName(names = {"грязь"})
@@ -59,7 +71,7 @@ public class MasterReceiverService {
         var nick = command.split(" ");
         if (discordService.isPresentRole(event, Role.MASTER) && nick.length > 1) {
             var name = nick[1];
-            discordService.sendPrivateMessage(event, event.getMember(), messageService.getAllMessages(name));
+            discordService.sendPrivateMessage(event.getMember(), messageService.getAllMessages(name));
         }
     }
 
@@ -155,7 +167,7 @@ public class MasterReceiverService {
                 }
             }
             if (user == null) {
-                discordService.sendChat(event, "Пользователь не найден!");
+                discordService.sendChat(event.getTextChannel(), "Пользователь не найден!");
             } else {
                 var number = getRate(spl, 2);
                 var rate = winRateService.addMiss(user, number);
@@ -185,7 +197,7 @@ public class MasterReceiverService {
             }
 
             if (user == null) {
-                discordService.sendChat(event, "Пользователь " + player + " не найден!");
+                discordService.sendChat(event.getTextChannel(), "Пользователь " + player + " не найден!");
             } else {
                 var rate = winRateService.addMaster(user);
                 discordService.sendChatEmbed(event, "Кол-во выйгранных игр за дона " + user.getUserName(), rate.getMafiaMaster() + "", null);
@@ -216,7 +228,7 @@ public class MasterReceiverService {
                 }
             }
             if (user == null) {
-                discordService.sendChat(event, "Пользователь не найден!");
+                discordService.sendChat(event.getTextChannel(), "Пользователь не найден!");
             } else {
                 var number = getRate(spl, 2);
                 var rate = winRateService.addFind(user, number);
@@ -247,7 +259,7 @@ public class MasterReceiverService {
             }
 
             if (user == null) {
-                discordService.sendChat(event, "Пользователь " + player + " не найден!");
+                discordService.sendChat(event.getTextChannel(), "Пользователь " + player + " не найден!");
             } else {
                 var rate = winRateService.addDonWin(user);
                 discordService.sendChatEmbed(event, "Кол-во выйгранных игр за дона " + user.getUserName(), rate.getMafiaWinDon() + "", null);
@@ -278,7 +290,7 @@ public class MasterReceiverService {
             }
 
             if (user == null) {
-                discordService.sendChat(event, "Пользователь " + player + " не найден!");
+                discordService.sendChat(event.getTextChannel(), "Пользователь " + player + " не найден!");
             } else {
                 var rate = winRateService.addDonLose(user);
                 discordService.sendChatEmbed(event, "Кол-во проигранных игр за дона " + user.getUserName(), rate.getMafiaLoseDon() + "", null);
@@ -308,7 +320,7 @@ public class MasterReceiverService {
             }
 
             if (user == null) {
-                discordService.sendChat(event, "Пользователь " + player + " не найден!");
+                discordService.sendChat(event.getTextChannel(), "Пользователь " + player + " не найден!");
             } else {
                 var rate = winRateService.addSheriffWin(user);
                 discordService.sendChatEmbed(event, "Кол-во выйгранных игр за шерифа " + user.getUserName(), rate.getMafiaWinSheriff() + "", null);
@@ -338,7 +350,7 @@ public class MasterReceiverService {
             }
 
             if (user == null) {
-                discordService.sendChat(event, "Пользователь " + player + " не найден!");
+                discordService.sendChat(event.getTextChannel(), "Пользователь " + player + " не найден!");
             } else {
                 var rate = winRateService.addSheriffLose(user);
                 discordService.sendChatEmbed(event, "Кол-во проигранных игр за шерифа " + user.getUserName(), rate.getMafiaLoseSheriff() + "", null);
@@ -368,7 +380,7 @@ public class MasterReceiverService {
             }
 
             if (user == null) {
-                discordService.sendChat(event, "Пользователь " + player + " не найден!");
+                discordService.sendChat(event.getTextChannel(), "Пользователь " + player + " не найден!");
             } else {
                 var rate = winRateService.addRedWin(user);
                 discordService.sendChatEmbed(event, "Кол-во выйгранных игр за красных " + user.getUserName(), rate.getMafiaWinRed() + "", null);
@@ -398,7 +410,7 @@ public class MasterReceiverService {
             }
 
             if (user == null) {
-                discordService.sendChat(event, "Пользователь " + player + " не найден!");
+                discordService.sendChat(event.getTextChannel(), "Пользователь " + player + " не найден!");
             } else {
                 var rate = winRateService.addRedLose(user);
                 discordService.sendChatEmbed(event, "Кол-во проигранных игр за красных " + user.getUserName(), rate.getMafiaLoseRed() + "", null);
@@ -428,7 +440,7 @@ public class MasterReceiverService {
             }
 
             if (user == null) {
-                discordService.sendChat(event, "Пользователь " + player + " не найден!");
+                discordService.sendChat(event.getTextChannel(), "Пользователь " + player + " не найден!");
             } else {
                 var rate = winRateService.addBlackWin(user);
                 discordService.sendChatEmbed(event, "Кол-во выйгранных игр за черных " + user.getUserName(), rate.getMafiaWinBlack() + "", null);
@@ -458,7 +470,7 @@ public class MasterReceiverService {
             }
 
             if (user == null) {
-                discordService.sendChat(event, "Пользователь " + player + " не найден!");
+                discordService.sendChat(event.getTextChannel(), "Пользователь " + player + " не найден!");
             } else {
                 var rate = winRateService.addBlackLose(user);
                 discordService.sendChatEmbed(event, "Кол-во проигранных игр за черных " + user.getUserName(), rate.getMafiaLoseBlack() + "", null);
@@ -482,7 +494,7 @@ public class MasterReceiverService {
         } else {
             var user = userService.findById(getId(spl[1]));
             if (user == null) {
-                discordService.sendChat(event, "Пользователь не найден!");
+                discordService.sendChat(event.getTextChannel(), "Пользователь не найден!");
             } else {
                 discordService.sendChatEmbed(event, "Винрейт " + user.getUserName(), null, null,rangService.getWinRate(user));
             }
@@ -498,7 +510,7 @@ public class MasterReceiverService {
         } else {
             var user = userService.findById(getId(spl[1]));
             if (user == null) {
-                discordService.sendChat(event, "Пользователь не найден!");
+                discordService.sendChat(event.getTextChannel(), "Пользователь не найден!");
             } else {
                 discordService.sendChatEmbed(event, "баланс " + user.getUserName(), user.getRating() + "", null);
             }
@@ -527,12 +539,12 @@ public class MasterReceiverService {
         }
         var user = userService.findById(getId(spl[1]));
         if (user == null) {
-            discordService.sendChat(event, "Пользователь не найден!");
+            discordService.sendChat(event.getTextChannel(), "Пользователь не найден!");
         } else {
             var number = getRate(spl, 2);
             var godUser = userService.getOrNewUser(event.getMember());
             if (godUser.getRating() < number) {
-                discordService.sendChat(event, "Недостаточно средств!");
+                discordService.sendChat(event.getTextChannel(), "Недостаточно средств!");
                 return;
             }
             var from = "<@!" + event.getMember().getIdLong() + ">";
@@ -560,7 +572,7 @@ public class MasterReceiverService {
         } else if (spl.length > 2) {
             var user = userService.findById(getId(spl[1]));
             if (user == null) {
-                discordService.sendChat(event, "Пользователь не найден!");
+                discordService.sendChat(event.getTextChannel(), "Пользователь не найден!");
             } else {
                 var number = getRate(spl, 2);
                 var rate = userService.addRating(user, number,
@@ -605,7 +617,7 @@ public class MasterReceiverService {
     @CommandName(names = {"зр", "зритель", "смотреть", "watch", "watcher"})
     public void watcher(MessageReceivedEvent event, String command) {
         discordService.addOrRemoveRole(event, Role.WATCHER);
-        discordService.changeNickName(event, event.getMember(), nickName -> !nickName.startsWith("Зр.") ? "Зр." + nickName : nickName);
+        discordService.changeNickName(event.getMember(), nickName -> !nickName.startsWith("Зр.") ? "Зр." + nickName : nickName);
     }
 
     @CommandName(names = {"ведущий", "вд"})

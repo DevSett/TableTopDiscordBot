@@ -11,7 +11,7 @@ import ru.devsett.bot.intefaces.CommandName;
 import ru.devsett.bot.service.DiscordService;
 import ru.devsett.bot.util.DiscordException;
 import ru.devsett.config.DiscordConfig;
-import ru.devsett.db.service.UserService;
+import ru.devsett.db.service.impl.UserService;
 
 import java.awt.*;
 import java.lang.reflect.InvocationTargetException;
@@ -117,7 +117,7 @@ public class MessageReceiverService extends ListenerAdapter {
         } catch (InvocationTargetException e) {
             if (e.getTargetException() instanceof DiscordException) {
                 DiscordException discordException = (DiscordException) e.getTargetException();
-                discordService.sendChat(event, discordException.getMessage());
+                discordService.sendChat(event.getTextChannel(), discordException.getMessage());
             }
             discordService.toLogTextChannel("Message Exception", e.getTargetException().getMessage(), event, Color.RED.getRGB());
             log.error(e);

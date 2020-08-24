@@ -8,10 +8,10 @@ import ru.devsett.bot.util.DiscordException;
 import ru.devsett.bot.util.Field;
 import ru.devsett.db.dto.UserEntity;
 import ru.devsett.db.dto.WinRateEntity;
-import ru.devsett.db.service.ChannelService;
-import ru.devsett.db.service.UserService;
-import ru.devsett.db.service.WatchmanService;
-import ru.devsett.db.service.WinRateService;
+import ru.devsett.db.service.impl.ChannelService;
+import ru.devsett.db.service.impl.UserService;
+import ru.devsett.db.service.impl.WatchmanService;
+import ru.devsett.db.service.impl.WinRateService;
 
 import java.util.ArrayList;
 import java.util.List;

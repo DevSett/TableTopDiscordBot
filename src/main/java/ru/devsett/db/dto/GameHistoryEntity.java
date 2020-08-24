@@ -17,6 +17,8 @@ public class GameHistoryEntity {
     private boolean isClassic;
     @Getter(onMethod_ = {@Basic, @Column(name = "IS_WIN_RED")})
     private boolean isWinRed;
+    @Getter(onMethod_ = {@Basic, @Column(name = "IS_END_GAME")})
+    private boolean isEndGame;
     @Getter(onMethod_ = {@OneToMany(fetch = FetchType.LAZY, mappedBy = "gameHistoryEntity")})
     private Collection<WhoPlayerHistoryEntity> whoPlayerHistoryEntityByGameHistory;
     @Getter(onMethod_ = {@ManyToOne(fetch = FetchType.LAZY), @JoinColumn(name = "DON_PLAYER", referencedColumnName = "ID")})

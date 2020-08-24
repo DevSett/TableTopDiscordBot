@@ -1,4 +1,4 @@
-package ru.devsett.db.service;
+package ru.devsett.db.service.impl;
 
 import org.springframework.stereotype.Service;
 import ru.devsett.bot.util.MafiaRole;
@@ -20,7 +20,7 @@ public class GameHistoryService {
         this.whoPlayerHistoryRepository = whoPlayerHistoryRepository;
     }
 
-    public GameHistoryEntity addGame(List<Player> playerayers, boolean isClassic){
+    public GameHistoryEntity addGame(List<Player> playerayers, boolean isClassic) {
         var game = new GameHistoryEntity();
         game.setPlayers((long) playerayers.size());
         game.setClassic(isClassic);
@@ -42,7 +42,7 @@ public class GameHistoryService {
                 game.setSheriffPlayer(player.getUserEntity());
             }
         }
-       return gameHistoryRepository.save(game);
+        return gameHistoryRepository.save(game);
     }
 
     public GameHistoryEntity win(long number, boolean isRedWin) {
@@ -50,12 +50,26 @@ public class GameHistoryService {
         if (game.isPresent()) {
             var gameI = game.get();
             gameI.setWinRed(isRedWin);
+            gameI.setEndGame(true);
             return gameHistoryRepository.save(gameI);
         }
         return null;
     }
 
-    public void deleteGame(long number) {
-       gameHistoryRepository.deleteById(number);
+    public void deleteAllStopGames() {
+        gameHistoryRepository.findAllByEndGameIsFalse()
+                .forEach(game -> whoPlayerHistoryRepository
+                        .deleteAll(whoPlayerHistoryRepository.findAllByGameHistoryEntity(game)));
+        gameHistoryRepository.deleteAll(gameHistoryRepository.findAllByEndGameIsFalse());
     }
+    public List<WhoPlayerHistoryEntity> getAllWho(GameHistoryEntity game) {
+       return whoPlayerHistoryRepository.findAllByGameHistoryEntity(game);
+    }
+    public void deleteGame(long number) {
+        whoPlayerHistoryRepository
+                .deleteAll(whoPlayerHistoryRepository
+                        .findAllByGameHistoryEntity(gameHistoryRepository.getOne(number)));
+        gameHistoryRepository.deleteById(number);
+    }
+
 }
