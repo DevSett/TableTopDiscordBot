@@ -1,6 +1,7 @@
 package ru.devsett.bot.service.games;
 
 import lombok.extern.log4j.Log4j2;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import org.springframework.stereotype.Service;
@@ -11,6 +12,7 @@ import ru.devsett.db.dto.GameHistoryEntity;
 import ru.devsett.db.dto.WhoPlayerHistoryEntity;
 import ru.devsett.db.service.WinRateInterface;
 import ru.devsett.db.service.impl.GameHistoryService;
+import ru.devsett.db.service.impl.UserService;
 import ru.devsett.db.service.impl.WinRateClassicService;
 import ru.devsett.db.service.impl.WinRateService;
 
@@ -26,12 +28,14 @@ public class MafiaService {
     private final GameHistoryService gameHistoryService;
     private final WinRateClassicService winRateClassicService;
     private final WinRateService winRateService;
+    private final UserService userService;
 
-    public MafiaService(DiscordService discordService, GameHistoryService gameHistoryService, WinRateClassicService winRateClassicService, WinRateService winRateService) {
+    public MafiaService(DiscordService discordService, GameHistoryService gameHistoryService, WinRateClassicService winRateClassicService, WinRateService winRateService, UserService userService) {
         this.discordService = discordService;
         this.gameHistoryService = gameHistoryService;
         this.winRateClassicService = winRateClassicService;
         this.winRateService = winRateService;
+        this.userService = userService;
     }
 
     public void createGame(Message msg, MessageReactionAddEvent event) {
@@ -91,15 +95,15 @@ public class MafiaService {
         }
 
         if (isClassic) {
-            addWinRate(winRateClassicService, game);
+            addWinRate(winRateClassicService, game, event.getMember());
         } else {
-            addWinRate(winRateService, game);
+            addWinRate(winRateService, game,event.getMember());
         }
     }
 
-    private void addWinRate(WinRateInterface winRateInterface, GameHistoryEntity game) {
+    private void addWinRate(WinRateInterface winRateInterface, GameHistoryEntity game, Member member) {
         var players = gameHistoryService.getAllWho(game);
-
+        winRateInterface.addMaster(userService.getOrNewUser(member));
         if (game.isWinRed()){
             if (players.size() > 0) {
                 for (WhoPlayerHistoryEntity whoPlayerHistoryEntity : players) {
