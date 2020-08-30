@@ -44,7 +44,6 @@ public class MafiaBot {
         this.jda = discordClient;
 
         discordClient.addEventListener(messageReceiverService, voiceReceiverService,buttonReceiverService);
-        masterReceiverService.checkOnBan();
 
         discordClient.awaitReady();
     }

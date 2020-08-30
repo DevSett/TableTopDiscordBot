@@ -19,7 +19,7 @@ import java.util.List;
 
 @Service
 @Log4j2
-public class TelegramService extends TelegramLongPollingBot {
+public class TelegramService /**extends TelegramLongPollingBot**/ {
     private final TelegramConfig telegramConfig;
     private final DiscordService discordService;
     private final MasterReceiverService masterReceiverService;
@@ -32,7 +32,6 @@ public class TelegramService extends TelegramLongPollingBot {
         this.masterReceiverService = masterReceiverService;
     }
 
-    @Override
     public void onUpdateReceived(Update update) {
         Message message = update.getMessage();
         if (message == null) {
@@ -55,12 +54,10 @@ public class TelegramService extends TelegramLongPollingBot {
     }
 
 
-    @Override
     public String getBotUsername() {
         return telegramConfig.getUsername();
     }
 
-    @Override
     public String getBotToken() {
         return telegramConfig.getToken();
     }
@@ -104,12 +101,12 @@ public class TelegramService extends TelegramLongPollingBot {
         if (replyKeyboardMarkup != null) {
             sendMessage.setReplyMarkup(replyKeyboardMarkup);
         }
-        try {
-            execute(sendMessage);
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
-            log.error("sndMsg", e);
-        }
+//        try {
+//            execute(sendMessage);
+//        } catch (TelegramApiException e) {
+//            e.printStackTrace();
+//            log.error("sndMsg", e);
+//        }
 
     }
 }

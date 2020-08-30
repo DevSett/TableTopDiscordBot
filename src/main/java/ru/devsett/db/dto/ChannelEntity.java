@@ -2,6 +2,7 @@ package ru.devsett.db.dto;
 
 import lombok.Getter;
 import lombok.Setter;
+import ru.devsett.bot.util.TypeChannel;
 
 import javax.persistence.*;
 import java.util.Collection;
@@ -19,6 +20,9 @@ public class ChannelEntity {
     private boolean isVoice;
     @Getter(onMethod_ = {@OneToMany(fetch = FetchType.LAZY, mappedBy = "channelEntity")})
     private Collection<WatchmanEntity> watchmanEntitiesByChannel;
+    @Getter(onMethod_ = {@Basic, @Column(name = "TYPE_CHANNEL")})
+    private TypeChannel typeChannel = TypeChannel.DEFAULT_CHANNEL;
+
 
     @Override
     public boolean equals(Object o) {

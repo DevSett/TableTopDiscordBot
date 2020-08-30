@@ -3,6 +3,7 @@ package ru.devsett.bot.service.receiver;
 import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.springframework.stereotype.Service;
@@ -13,14 +14,11 @@ import ru.devsett.bot.service.games.RangService;
 import ru.devsett.bot.util.DiscordException;
 import ru.devsett.bot.util.Emoji;
 import ru.devsett.bot.util.Role;
+import ru.devsett.bot.util.TypeChannel;
 import ru.devsett.config.DiscordConfig;
-import ru.devsett.db.service.impl.GameHistoryService;
-import ru.devsett.db.service.impl.MessageService;
-import ru.devsett.db.service.impl.UserService;
-import ru.devsett.db.service.impl.WinRateService;
+import ru.devsett.db.service.impl.*;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -33,14 +31,14 @@ public class MasterReceiverService {
     private final WinRateService winRateService;
     private final DiscordConfig discordConfig;
     private final GameHistoryService gameHistoryService;
+    private final ChannelService channelService;
 
     @Getter
     private Member telegramMember;
     @Getter
     private String tokenTelegramSession;
-    @Getter
-    private TextChannel channelMaster;
-    public MasterReceiverService(MessageService messageService, UserService userService, DiscordService discordService, RangService rangService, WinRateService winRateService, DiscordConfig discordConfig, GameHistoryService gameHistoryService) {
+
+    public MasterReceiverService(MessageService messageService, UserService userService, DiscordService discordService, RangService rangService, WinRateService winRateService, DiscordConfig discordConfig, GameHistoryService gameHistoryService, ChannelService channelService) {
         this.messageService = messageService;
         this.userService = userService;
         this.discordService = discordService;
@@ -48,7 +46,31 @@ public class MasterReceiverService {
         this.winRateService = winRateService;
         this.discordConfig = discordConfig;
         this.gameHistoryService = gameHistoryService;
+        this.channelService = channelService;
     }
+
+    @CommandName(names = {"игра"})
+    public void historyGame(MessageReceivedEvent event, String command) {
+        if (!discordService.isPresentRole(event, Role.MODERATOR)) {
+            return;
+        }
+
+        var cmd = command.split(" ");
+        Integer num = Integer.valueOf(cmd[1]);
+
+        var game = gameHistoryService.getGameById(num);
+
+        discordService.sendChatEmbedTemp(event, "Игра №"+num, "Победа "+ (game.isWinRed()?"Красных":"Черных"),null);
+    }
+
+    @CommandName(names = {"clearch"})
+    public void deleateAllTypeChannels(MessageReceivedEvent event, String command) {
+        if (!discordService.isPresentRole(event, Role.MODERATOR)) {
+            return;
+        }
+        channelService.clearTypes();
+    }
+
     @CommandName(names = {"clearh"})
     public void deleateAllHistoryDontStop(MessageReceivedEvent event, String command) {
         if (!discordService.isPresentRole(event, Role.MODERATOR)) {
@@ -56,14 +78,113 @@ public class MasterReceiverService {
         }
         gameHistoryService.deleteAllStopGames();
     }
-    @CommandName(names = {"создать-в"})
+
+    @CommandName(names = {"создать-новости-адд"})
+    public void createNewsAddChannel(MessageReceivedEvent event, String command) {
+        if (!discordService.isPresentRole(event, Role.MODERATOR)) {
+            return;
+        }
+
+        var ch = event.getTextChannel();
+
+        var chE = channelService.getOrNewChannel(ch.getName(), ch.getIdLong(), false);
+        channelService.updateType(chE, TypeChannel.NEWS_ADD_CHANNEL);
+
+        Calendar today = Calendar.getInstance();
+        today.set(Calendar.HOUR_OF_DAY, 15);
+        today.set(Calendar.MINUTE, 0);
+        today.set(Calendar.SECOND, 0);
+
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                var chNewsEntity = channelService.findByType(TypeChannel.NEWS_CHANNEL);
+                var chNewsAddEntity = channelService.findByType(TypeChannel.NEWS_ADD_CHANNEL);
+
+                var chNews = MafiaBot.getGuild().getTextChannelById(chNewsEntity.getId());
+                var chNewsAdd = MafiaBot.getGuild().getTextChannelById(chNewsAddEntity.getId());
+
+                if (!chNewsAdd.hasLatestMessage()) {
+                    return;
+                }
+                List<String> news = new ArrayList<>();
+
+                chNewsAdd.getHistory().retrievePast(10).queue(messages -> {
+                    for (Message message : messages) {
+                        news.add(message.getContentRaw());
+                        message.delete().queue();
+                    }
+                    chNews.sendMessage(String.join("\n", news)).queue();
+                });
+            }
+        }, today.getTime(), TimeUnit.MILLISECONDS.convert(1, TimeUnit.DAYS));
+        discordService.sendChat(event.getTextChannel(), "Чат новостей заплонирован!");
+    }
+
+    @CommandName(names = {"создать-новости"})
+    public void createNewsChannel(MessageReceivedEvent event, String command) {
+        if (!discordService.isPresentRole(event, Role.MODERATOR)) {
+            return;
+        }
+
+        var ch = event.getTextChannel();
+
+        var chE = channelService.getOrNewChannel(ch.getName(), ch.getIdLong(), false);
+        channelService.updateType(chE, TypeChannel.NEWS_CHANNEL);
+    }
+
+    @CommandName(names = {"создать-вход"})
+    public void createJoinChannel(MessageReceivedEvent event, String command) {
+        if (!discordService.isPresentRole(event, Role.MODERATOR)) {
+            return;
+        }
+
+        var ch = event.getTextChannel();
+
+        var chE = channelService.getOrNewChannel(ch.getName(), ch.getIdLong(), false);
+        channelService.updateType(chE, TypeChannel.JOIN_CHANNEL);
+    }
+
+    @CommandName(names = {"кто-бан"})
+    public void whoBan(MessageReceivedEvent event, String command) {
+        if (!discordService.isPresentRole(event, Role.MODERATOR)) {
+            return;
+        }
+
+        var cmd = command.split(" ");
+        var user = userService.findById(Long.parseLong(cmd[1]));
+        if (user != null) {
+            discordService.sendChat(event.getTextChannel(), user.getUserName() + " забанен " + userService.findById(user.getWhoBan().getId()).getUserName());
+        } else {
+            discordService.sendChat(event.getTextChannel(), "Юзер не найден!");
+        }
+    }
+
+    @CommandName(names = {"создать-бан"})
+    public void createBanChannel(MessageReceivedEvent event, String command) {
+        if (!discordService.isPresentRole(event, Role.MODERATOR)) {
+            return;
+        }
+
+        var ch = event.getTextChannel();
+
+        var chE = channelService.getOrNewChannel(ch.getName(), ch.getIdLong(), false);
+        channelService.updateType(chE, TypeChannel.BAN_CHANNEL);
+    }
+
+    @CommandName(names = {"создать-мастер"})
     public void createMasterChannel(MessageReceivedEvent event, String command) {
         if (!discordService.isPresentRole(event, Role.MODERATOR)) {
             return;
         }
         discordService.sendChat(event.getTextChannel(), "Создать классическую мафию", Emoji.GAME);
         discordService.sendChat(event.getTextChannel(), "Создать городскую мафию", Emoji.GAME);
-        channelMaster = event.getTextChannel();
+
+        var ch = event.getTextChannel();
+
+        var chE = channelService.getOrNewChannel(ch.getName(), ch.getIdLong(), false);
+        channelService.updateType(chE, TypeChannel.MASTER_CHANNEL);
     }
 
     @CommandName(names = {"грязь"})
@@ -77,8 +198,8 @@ public class MasterReceiverService {
 
     @CommandName(names = {"вер"})
     public void getVersion(MessageReceivedEvent event, String command) {
-       discordService.sendChatEmbed(event,  "Версия: " + discordConfig.getBuildVersion(),
-               " Время сборки: " + discordConfig.getBuildTimestamp(), null);
+        discordService.sendChatEmbed(event, "Версия: " + discordConfig.getBuildVersion(),
+                " Время сборки: " + discordConfig.getBuildTimestamp(), null);
     }
 
     @CommandName(names = {"хелп"})
@@ -140,7 +261,7 @@ public class MasterReceiverService {
                     + "в-ход %теги игроков через запятую% %кол-во% - зачисление статистики дону\n"
                     + "в-ведущий %теги игроков через пробел%"
                     + "в-шериф %теги игроков через пробел% - зачисление статистики шерифу\n"
-                     + "п-ход %теги игроков через запятую% %кол-во% - зачисление статистики дону";
+                    + "п-ход %теги игроков через запятую% %кол-во% - зачисление статистики дону";
 
             discordService.sendChatEmbed(event, "ДЛЯ МОДЕРАТОРОВ", msgHelp2, "https://github.com/DevSett/TableTopDiscordBot");
         }
@@ -175,6 +296,7 @@ public class MasterReceiverService {
             }
         }
     }
+
     @CommandName(names = {"в-ведущий"})
     public void addMaster(MessageReceivedEvent event, String command) {
         if (!discordService.isPresentRole(event, Role.MASTER)) {
@@ -480,23 +602,44 @@ public class MasterReceiverService {
 
     @CommandName(names = {"топ"})
     public void top(MessageReceivedEvent event, String command) {
-        discordService.sendChatEmbed(event, "Топ игроков в мафию",
-                null, null,rangService.getTopWinRate());
+        discordService.sendChatEmbedTemp(event, "Топ игроков в мафию по городу",
+                null, null, rangService.getTopWinRate(), 30);
     }
 
+    @CommandName(names = {"топК"})
+    public void topK(MessageReceivedEvent event, String command) {
+        discordService.sendChatEmbedTemp(event, "Топ игроков в мафию по классике",
+                null, null, rangService.getTopWinRateK(), 30);
+    }
 
     @CommandName(names = {"винрейт"})
     public void winrate(MessageReceivedEvent event, String command) {
         var spl = command.split(" ");
         if (spl.length == 1) {
-            discordService.sendChatEmbed(event, "Ваш винрейт",
-                    null, null, rangService.getWinRate(userService.getOrNewUser(event.getMember())));
+            discordService.sendChatEmbedTemp(event, "Ваш винрейт город",
+                    null, null, rangService.getWinRate(userService.getOrNewUser(event.getMember())),30);
+        } else {
+            var user = userService.findById(getId(spl[1]));
+            if (user == null) {
+                discordService.sendChatTemp(event.getTextChannel(), "Пользователь не найден!", 30);
+            } else {
+                discordService.sendChatEmbedTemp(event, "Винрейт города " + user.getUserName(), null, null, rangService.getWinRate(user),30);
+            }
+        }
+    }
+
+    @CommandName(names = {"винрейтк"})
+    public void winrateK(MessageReceivedEvent event, String command) {
+        var spl = command.split(" ");
+        if (spl.length == 1) {
+            discordService.sendChatEmbedTemp(event, "Ваш винрейт классика",
+                    null, null, rangService.getWinRateK(userService.getOrNewUser(event.getMember())),30);
         } else {
             var user = userService.findById(getId(spl[1]));
             if (user == null) {
                 discordService.sendChat(event.getTextChannel(), "Пользователь не найден!");
             } else {
-                discordService.sendChatEmbed(event, "Винрейт " + user.getUserName(), null, null,rangService.getWinRate(user));
+                discordService.sendChatEmbedTemp(event, "Винрейт классики " + user.getUserName(), null, null, rangService.getWinRateK(user),30);
             }
         }
     }
@@ -505,14 +648,14 @@ public class MasterReceiverService {
     public void rate(MessageReceivedEvent event, String command) {
         var spl = command.split(" ");
         if (spl.length == 1) {
-            discordService.sendChatEmbed(event, "Ваш баланс",
+            discordService.sendChatEmbedTemp(event, "Ваш баланс",
                     userService.getOrNewUser(event.getMember()).getRating() + "", null);
         } else {
             var user = userService.findById(getId(spl[1]));
             if (user == null) {
-                discordService.sendChat(event.getTextChannel(), "Пользователь не найден!");
+                discordService.sendChatTemp(event.getTextChannel(), "Пользователь не найден!",30);
             } else {
-                discordService.sendChatEmbed(event, "баланс " + user.getUserName(), user.getRating() + "", null);
+                discordService.sendChatEmbedTemp(event, "баланс " + user.getUserName(), user.getRating() + "", null);
             }
         }
     }
@@ -527,8 +670,8 @@ public class MasterReceiverService {
 
     @CommandName(names = {"богачи"})
     public void topMoney(MessageReceivedEvent event, String command) {
-        discordService.sendChatEmbed(event, "10 самых богатых игроков",
-                null, null, userService.getTopMoney());
+        discordService.sendChatEmbedTemp(event, "10 самых богатых игроков",
+                null, null, userService.getTopMoney(), 30);
     }
 
     @CommandName(names = {"отдать-коины"})
@@ -632,26 +775,5 @@ public class MasterReceiverService {
         if (discordService.isPresentRole(event, Role.MASTER)) {
             discordService.randomOrderPlayers(event, discordService.getChannelPlayers(event, "Зр."));
         }
-    }
-
-    public void checkOnBan() {
-        ScheduledExecutorService ses = Executors.newSingleThreadScheduledExecutor();
-        ses.scheduleAtFixedRate(() -> {
-            userService.getUsersForUnBan().forEach(user -> {
-                try {
-                    MafiaBot.getGuild().unban(String.valueOf(user.getId())).queue();
-                    try {
-                        discordService.addOrRemoveRole(MafiaBot.getGuild(),
-                                MafiaBot.getGuild().getMemberById(user.getId()),
-                                Role.BAN);
-                    } catch (Exception e) {
-                        log.error(e);
-                    }
-                    userService.unban(user);
-                } catch (Exception e) {
-                    log.error(e);
-                }
-            });
-        }, 0, 24, TimeUnit.HOURS);
     }
 }

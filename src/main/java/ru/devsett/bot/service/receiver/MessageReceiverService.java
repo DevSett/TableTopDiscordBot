@@ -10,7 +10,9 @@ import org.springframework.stereotype.Service;
 import ru.devsett.bot.intefaces.CommandName;
 import ru.devsett.bot.service.DiscordService;
 import ru.devsett.bot.util.DiscordException;
+import ru.devsett.bot.util.TypeChannel;
 import ru.devsett.config.DiscordConfig;
+import ru.devsett.db.service.impl.ChannelService;
 import ru.devsett.db.service.impl.UserService;
 
 import java.awt.*;
@@ -28,17 +30,19 @@ public class MessageReceiverService extends ListenerAdapter {
     private final MasterReceiverService masterReceiverService;
     private final BunkerReceiverService bunkerReceiverService;
     private final UserService userService;
+    private final ChannelService channelService;
 
     public MessageReceiverService(DiscordService discordService,
                                   DiscordConfig discordConfig,
                                   MasterReceiverService masterReceiverService,
                                   BunkerReceiverService bunkerReceiverService,
-                                  UserService userService) {
+                                  UserService userService, ChannelService channelService) {
         this.discordService = discordService;
         this.discordConfig = discordConfig;
         this.masterReceiverService = masterReceiverService;
         this.bunkerReceiverService = bunkerReceiverService;
         this.userService = userService;
+        this.channelService = channelService;
     }
 
     @Override
@@ -53,6 +57,8 @@ public class MessageReceiverService extends ListenerAdapter {
             }
             Message message = event.getMessage();
             String content = message.getContentRaw();
+
+            discordService.workTypeChannel(event);
 
             if (content.startsWith(discordConfig.getPrefix())
                     && content.length() > 2

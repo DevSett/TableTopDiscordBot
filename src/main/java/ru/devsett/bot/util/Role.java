@@ -5,8 +5,14 @@ public enum  Role {
     PLAYER("Играет"),
     SUPPORT("Поддержка"),
     MASTER("Ведущий"),
+    MAFCLUB("Мафклуб"),
     MODERATOR("Модератор"),
     EXPERT("Опытный игрок"),
+    ROLE_1("MAF I"),
+    ROLE_2("MAF II"),
+    ROLE_3("MAF III"),
+    ROLE_4("MAF IV"),
+    ROLE_5("MAF V"),
     BAN("Бан");
 
     private String name;
