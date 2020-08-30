@@ -51,9 +51,6 @@ public class MasterReceiverService {
 
     @CommandName(names = {"игра"})
     public void historyGame(MessageReceivedEvent event, String command) {
-        if (!discordService.isPresentRole(event, Role.MODERATOR)) {
-            return;
-        }
 
         var cmd = command.split(" ");
         Integer num = Integer.valueOf(cmd[1]);
