@@ -60,7 +60,7 @@ public class ButtonReceiverService extends ListenerAdapter {
             var textCh = event.getTextChannel();
             var ch = channelService.getOrNewChannel(textCh.getName(), textCh.getIdLong(), false);
 
-            if (ch.getTypeChannel().equals(TypeChannel.MASTER_CHANNEL.getSubtype())) {
+            if (ch.getTypeChannel() == TypeChannel.MASTER_CHANNEL) {
                 mafiaService.createGame(msg, event);
             }
         });

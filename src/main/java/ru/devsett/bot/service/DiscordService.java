@@ -372,7 +372,7 @@ public class DiscordService {
         List<Member> membersOrdered = new ArrayList<>();
 
         for (Member channelMember : channel.getMembers()) {
-            if (!channelMember.getEffectiveName().startsWith("Зр.") && !channelMember.getEffectiveName().startsWith("!")) {
+            if (!channelMember.getEffectiveName().toLowerCase().startsWith("зр.") && !channelMember.getEffectiveName().startsWith("!")) {
                 if (channelMember != memberMsg) {
                     membersOrdered.add(channelMember);
                 }
