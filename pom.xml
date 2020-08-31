@@ -6,7 +6,7 @@
 
     <groupId>org.example</groupId>
     <artifactId>MafiaBot</artifactId>
-    <version>1.01</version>
+    <version>1.0</version>
 
     <properties>
         <java.version>14</java.version>
