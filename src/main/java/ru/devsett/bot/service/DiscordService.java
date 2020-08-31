@@ -438,14 +438,16 @@ public class DiscordService {
         return players;
     }
 
+    @SneakyThrows
     public void deleteOrder(MessageReactionAddEvent event) {
         var channels = event.getMember().getVoiceState().getChannel();
         for (Member member : channels.getMembers()) {
-            var nickName = member.getEffectiveName();
+            var retrivedMember = event.getGuild().retrieveMember(member.getUser()).submit().get();
+            var nickName = retrivedMember.getEffectiveName();
             if (nickName.length() > 3 && nickName.toCharArray()[2] == '.' && isOrder(nickName.substring(0, 2))) {
-                changeNickName(member, name -> name.substring(3));
+                changeNickName(retrivedMember, name -> name.substring(3));
             } else {
-                changeNickName(member, name -> name);
+                changeNickName(retrivedMember, name -> name);
             }
         }
     }
