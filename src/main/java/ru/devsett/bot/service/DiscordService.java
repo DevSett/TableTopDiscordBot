@@ -1,5 +1,6 @@
 package ru.devsett.bot.service;
 
+import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
@@ -76,7 +77,7 @@ public class DiscordService {
         try {
             member.modifyNickname(newNickName).queue();
         } catch (HierarchyException ex) {
-           toLog("Exception", null, ex.getMessage(), Color.RED.getRGB());
+            toLog("Exception", null, ex.getMessage(), Color.RED.getRGB());
         }
         return newNickName;
     }
@@ -222,7 +223,7 @@ public class DiscordService {
                     message.delete().queue();
                     timer.cancel();
                 }
-            }, seconds*1000, 1);
+            }, seconds * 1000, 1);
         }, error -> {
             toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
         });
@@ -290,6 +291,7 @@ public class DiscordService {
     public void sendChatEmbedTemp(MessageReceivedEvent event, String title, String msgHelp, String url) {
         sendChatEmbedTemp(event, title, msgHelp, url, Collections.emptyList(), 30);
     }
+
     public void sendChatEmbedTemp(MessageReceivedEvent event, String title, String msgHelp, String url, List<Field> fields, Integer seconds) {
         var embBuilder = new EmbedBuilder().setTitle(title, url).setDescription(msgHelp);
         if (fields != null && !fields.isEmpty()) {
@@ -306,12 +308,13 @@ public class DiscordService {
                     event.getMessage().delete().queue();
                     timer.cancel();
                 }
-            }, seconds*1000, 1);
+            }, seconds * 1000, 1);
         }, error -> {
 
             toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
         });
     }
+
     public void toLogTextChannel(String title, String description, MessageReceivedEvent event, int color) {
         var name = "Неизвестно";
         var currentName = "Неизвестно";
@@ -366,25 +369,28 @@ public class DiscordService {
         }
     }
 
+    @SneakyThrows
     public List<Player> randomMafiaGame(MessageReactionAddEvent event) {
         var memberMsg = event.getMember();
         var channel = memberMsg.getVoiceState().getChannel();
         List<Member> membersOrdered = new ArrayList<>();
 
         for (Member channelMember : channel.getMembers()) {
-            if (!channelMember.getEffectiveName().toLowerCase().startsWith("зр.") && !channelMember.getEffectiveName().startsWith("!")) {
-                if (channelMember != memberMsg) {
-                    membersOrdered.add(channelMember);
+            var retrivedMember = event.getGuild().retrieveMember(channelMember.getUser()).submit().get();
+            if (!retrivedMember.getEffectiveName().toLowerCase().startsWith("зр.") && !retrivedMember.getEffectiveName().startsWith("!")) {
+                if (retrivedMember.getIdLong() != memberMsg.getIdLong()) {
+                    membersOrdered.add(retrivedMember);
                 }
             }
         }
+
         List<Integer> membersNumbers = new ArrayList<>();
         List<MafiaRole> roles = new ArrayList<>();
         if (membersOrdered.size() < 10) {
             for (int i = 0; i < 5; i++) {
                 roles.add(MafiaRole.RED);
             }
-            for (int i = 0;  i < 1; i++) {
+            for (int i = 0; i < 1; i++) {
                 roles.add(MafiaRole.BLACK);
             }
         } else if (membersOrdered.size() < 12) {
@@ -425,7 +431,7 @@ public class DiscordService {
             var roleIndex = roles.size() != 0 ? random.nextInt(roles.size()) : 0;
             players.add(new Player(userService.getOrNewUser(member), roles.size() == 0 ? MafiaRole.RED : roles.get(roleIndex), finalNumber));
             players.sort((o1, o2) -> o1.getNumber() > o2.getNumber() ? 1 : -1);
-            if (roles.size()!=0) {
+            if (roles.size() != 0) {
                 roles.remove(roleIndex);
             }
         }
@@ -447,24 +453,29 @@ public class DiscordService {
     public void workTypeChannel(MessageReceivedEvent event) {
         var ch = event.getTextChannel();
         var chEntity = channelService.getOrNewChannel(ch.getName(), ch.getIdLong(), false);
-        switch (chEntity.getTypeChannel()){
-            case BAN_CHANNEL : banChannel(event.getMessage(),event.getMember()); break;
-            case ROLE_CHANNEL: roleChannel(); break;
-            default : return;
+        switch (chEntity.getTypeChannel()) {
+            case BAN_CHANNEL:
+                banChannel(event.getMessage(), event.getMember());
+                break;
+            case ROLE_CHANNEL:
+                roleChannel();
+                break;
+            default:
+                return;
         }
     }
 
     private void roleChannel() {
     }
 
-    private void banChannel(Message message, Member member){
+    private void banChannel(Message message, Member member) {
         var content = message.getContentRaw();
-        if (!content.contains("<") || !content.contains(">")){
+        if (!content.contains("<") || !content.contains(">")) {
             return;
         }
-        content = content.substring(content.indexOf("<")+3, content.indexOf(">"));
+        content = content.substring(content.indexOf("<") + 3, content.indexOf(">"));
 
-       MafiaBot.getGuild().retrieveMemberById(content).queue(findedMember -> {
+        MafiaBot.getGuild().retrieveMemberById(content).queue(findedMember -> {
             if (findedMember != null) {
                 userService.getOrNewUser(findedMember);
                 userService.ban(findedMember, member, 999);
