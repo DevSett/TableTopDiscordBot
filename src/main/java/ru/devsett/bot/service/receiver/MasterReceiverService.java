@@ -754,18 +754,18 @@ public class MasterReceiverService {
         }
     }
 
-    @CommandName(names = {"зр", "зритель", "смотреть", "watch", "watcher"})
-    public void watcher(MessageReceivedEvent event, String command) {
-        discordService.addOrRemoveRole(event, Role.WATCHER);
-        discordService.changeNickName(event.getMember(), nickName -> !nickName.startsWith("Зр.") ? "Зр." + nickName : nickName);
-    }
-
-    @CommandName(names = {"ведущий", "вд"})
-    public void master(MessageReceivedEvent event, String command) {
-        if (discordService.isPresentRole(event, Role.EXPERT, Role.MASTER)) {
-            var action = discordService.addOrRemoveRole(event, Role.MASTER);
-        }
-    }
+//    @CommandName(names = {"зр", "зритель", "смотреть", "watch", "watcher"})
+//    public void watcher(MessageReceivedEvent event, String command) {
+//        discordService.addOrRemoveRole(event, Role.WATCHER);
+//        discordService.changeNickName(event.getMember(), nickName -> !nickName.startsWith("Зр.") ? "Зр." + nickName : nickName);
+//    }
+//
+//    @CommandName(names = {"ведущий", "вд"})
+//    public void master(MessageReceivedEvent event, String command) {
+//        if (discordService.isPresentRole(event, Role.EXPERT, Role.MASTER)) {
+//            var action = discordService.addOrRemoveRole(event, Role.MASTER);
+//        }
+//    }
 
     @CommandName(names = {"ордер"})
     public void playMafia(MessageReceivedEvent event, String command) {
