@@ -49,15 +49,15 @@ public class RangService {
             var timeSec = (watchman.getExitTime().getTime() - watchman.getJoinTime().getTime()) / 1000;
             var raite = 1d;
             if (member.getRoles().stream().anyMatch(role -> role.getName().equals(Role.ROLE_1.getName()))) {
-                raite = raite * (timeSec * 0.008);
+                raite =  (timeSec * 0.008);
             } else if (member.getRoles().stream().anyMatch(role -> role.getName().equals(Role.ROLE_2.getName()))) {
-                raite = raite * (timeSec * 0.012);
+                raite =  (timeSec * 0.012);
             } else if (member.getRoles().stream().anyMatch(role -> role.getName().equals(Role.ROLE_3.getName()))) {
-                raite = raite * (timeSec * 0.016);
+                raite =  (timeSec * 0.016);
             } else if (member.getRoles().stream().anyMatch(role -> role.getName().equals(Role.ROLE_4.getName()))) {
-                raite = raite * (timeSec * 0.02);
+                raite =  (timeSec * 0.02);
             } else if (member.getRoles().stream().anyMatch(role -> role.getName().equals(Role.ROLE_5.getName()))) {
-                raite = raite * (timeSec * 0.024);
+                raite =  (timeSec * 0.024);
             } else {
                 raite = (timeSec * 0.004);
             }
@@ -69,8 +69,6 @@ public class RangService {
         } else {
             throw new DiscordException("WATCHMAN EXIT не найден");
         }
-
-
     }
 
     public List<Field> getWinRateK(UserEntity user) {

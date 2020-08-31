@@ -381,10 +381,10 @@ public class DiscordService {
         List<Integer> membersNumbers = new ArrayList<>();
         List<MafiaRole> roles = new ArrayList<>();
         if (membersOrdered.size() < 10) {
-            for (int i = 0; i < membersOrdered.size() / 3.5; i++) {
+            for (int i = 0; i < 5; i++) {
                 roles.add(MafiaRole.RED);
             }
-            for (int i = 0; i < 1; i++) {
+            for (int i = 0;  i < 1; i++) {
                 roles.add(MafiaRole.BLACK);
             }
         } else if (membersOrdered.size() < 12) {
@@ -422,9 +422,12 @@ public class DiscordService {
             }
             String finalNewNickName = newNickName;
             changeNickName(member, name -> numberString(finalNumber) + (finalNewNickName.isEmpty() ? name : finalNewNickName));
-            var roleIndex = random.nextInt(roles.size());
-            players.add(new Player(userService.getOrNewUser(member), roles.get(roleIndex), finalNumber));
-            roles.remove(roleIndex);
+            var roleIndex = roles.size() != 0 ? random.nextInt(roles.size()) : 0;
+            players.add(new Player(userService.getOrNewUser(member), roles.size() == 0 ? MafiaRole.RED : roles.get(roleIndex), finalNumber));
+            players.sort((o1, o2) -> o1.getNumber() > o2.getNumber() ? 1 : -1);
+            if (roles.size()!=0) {
+                roles.remove(roleIndex);
+            }
         }
         return players;
     }

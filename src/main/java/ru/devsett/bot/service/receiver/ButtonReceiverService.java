@@ -14,6 +14,7 @@ import ru.devsett.db.service.impl.WinRateClassicService;
 import ru.devsett.db.service.impl.WinRateService;
 
 import javax.annotation.Nonnull;
+import java.awt.*;
 
 @Service
 @Log4j2
@@ -52,17 +53,22 @@ public class ButtonReceiverService extends ListenerAdapter {
 
     @Override
     public void onMessageReactionAdd(@Nonnull MessageReactionAddEvent event) {
-        event.retrieveMessage().queue(msg -> {
-            if (event.getMember().getUser().isBot()) { //TODO
-                return;
-            }
+        try {
+            event.retrieveMessage().queue(msg -> {
+                if (event.getMember().getUser().isBot()) { //TODO
+                    return;
+                }
 
-            var textCh = event.getTextChannel();
-            var ch = channelService.getOrNewChannel(textCh.getName(), textCh.getIdLong(), false);
+                var textCh = event.getTextChannel();
+                var ch = channelService.getOrNewChannel(textCh.getName(), textCh.getIdLong(), false);
 
-            if (ch.getTypeChannel() == TypeChannel.MASTER_CHANNEL) {
-                mafiaService.createGame(msg, event);
-            }
-        });
+                if (ch.getTypeChannel() == TypeChannel.MASTER_CHANNEL) {
+                    mafiaService.createGame(msg, event);
+                }
+            });
+        } catch (Exception e) {
+            log.error(e);
+            discordService.toLog("EmojiException", null, e.getMessage(), Color.RED.getRGB());
+        }
     }
 }
