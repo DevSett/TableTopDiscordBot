@@ -1,5 +1,6 @@
 package ru.devsett.bot.service.games;
 
+import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Service;
 import ru.devsett.bot.service.DiscordService;
 import ru.devsett.bot.util.Emoji;
 import ru.devsett.bot.util.Player;
+import ru.devsett.bot.util.Role;
 import ru.devsett.db.dto.GameHistoryEntity;
 import ru.devsett.db.dto.WhoPlayerHistoryEntity;
 import ru.devsett.db.service.WinRateInterface;
@@ -39,7 +41,7 @@ public class MafiaService {
     }
 
     public void createGame(Message msg, MessageReactionAddEvent event) {
-        var message = msg.getContentDisplay();
+        var message = msg.getContentRaw();
         var emj = event.getReactionEmote().getAsReactionCode();
         if (message.equals("Создать классическую мафию") && emj.equals(Emoji.GAME.getName())) {
             var players = discordService.randomMafiaGame(event);
@@ -62,15 +64,27 @@ public class MafiaService {
             });
         }
         if (message.startsWith("Городская мафия №")) {
-            modGame(event, msg, message, emj, false);
+            modGameMember(msg, event, message, emj, false);
         }
         if (message.startsWith("Классическая мафия №")) {
-            modGame(event,msg,message,emj, true);
+            modGameMember(msg, event, message, emj, true);
+        }
+    }
+
+    @SneakyThrows
+    private void modGameMember(Message msg, MessageReactionAddEvent event, String message, String emj, boolean b) {
+        var memberId = Long.parseLong(message.substring(message.indexOf("<") + 3, message.indexOf(">")));
+        if (memberId != event.getMember().getIdLong() && event.getMember().getRoles().stream().noneMatch(role -> role.getName().equals(Role.SUPPORT.getName()))) {
+            event.retrieveMessage().queue(msg2 -> {
+                msg2.removeReaction(event.getReactionEmote().getAsReactionCode(), event.getUser()).queue();
+            });
+        } else {
+            modGame(event, msg, message, emj, b);
         }
     }
 
     private void modGame(@Nonnull MessageReactionAddEvent event, Message msg, String message, String emj, boolean isClassic) {
-        var number = Long.parseLong(message.substring(message.indexOf("№")+1, message.indexOf("\n")));
+        var number = Long.parseLong(message.substring(message.indexOf("№") + 1, message.indexOf("\n")));
         GameHistoryEntity game = null;
         if (emj.equals(Emoji.ALERT.getName())) {
             gameHistoryService.deleteGame(number);
@@ -97,14 +111,14 @@ public class MafiaService {
         if (isClassic) {
             addWinRate(winRateClassicService, game, event.getMember());
         } else {
-            addWinRate(winRateService, game,event.getMember());
+            addWinRate(winRateService, game, event.getMember());
         }
     }
 
     private void addWinRate(WinRateInterface winRateInterface, GameHistoryEntity game, Member member) {
         var players = gameHistoryService.getAllWho(game);
         winRateInterface.addMaster(userService.getOrNewUser(member));
-        if (game.isWinRed()){
+        if (game.isWinRed()) {
             if (players.size() > 0) {
                 for (WhoPlayerHistoryEntity whoPlayerHistoryEntity : players) {
                     if (whoPlayerHistoryEntity.isRedPlayer()) {

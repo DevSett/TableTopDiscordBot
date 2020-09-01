@@ -195,7 +195,7 @@ public class MasterReceiverService {
 
     @CommandName(names = {"вер"})
     public void getVersion(MessageReceivedEvent event, String command) {
-        discordService.sendChatEmbed(event, "Версия: " + discordConfig.getBuildVersion(),
+        discordService.sendChatEmbed(event, "Версия: " + discordConfig.getBuildVersionHide(),
                 " Время сборки: " + discordConfig.getBuildTimestamp(), null);
     }
 

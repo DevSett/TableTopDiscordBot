@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -32,11 +33,17 @@ public class DiscordConfig {
     @Value("${build.timestamp}")
     private String buildTimestamp;
 
+    public String getBuildVersionHide() {
+        return "1.03";
+    }
+
     @Bean
     public JDA getDiscordClient() {
         JDA jda = null;
         try {
             jda = JDABuilder.createDefault(token)
+                    .enableIntents(GatewayIntent.GUILD_MEMBERS)
+                    .enableIntents(GatewayIntent.GUILD_MESSAGES)
                     .build();
         } catch (LoginException e) {
             log.error(e);
