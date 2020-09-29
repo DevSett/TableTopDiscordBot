@@ -52,7 +52,7 @@ public class MasterReceiverService {
     @CommandName(names = {"игра"})
     public void historyGame(MessageReceivedEvent event, String command) {
 
-        var cmd = command.split(" ");
+        var cmd = command.replaceAll("\\s+"," ").split(" ");
         Integer num = Integer.valueOf(cmd[1]);
 
         var game = gameHistoryService.getGameById(num);
@@ -99,8 +99,8 @@ public class MasterReceiverService {
                 var chNewsEntity = channelService.findByType(TypeChannel.NEWS_CHANNEL);
                 var chNewsAddEntity = channelService.findByType(TypeChannel.NEWS_ADD_CHANNEL);
 
-                var chNews = MafiaBot.getGuild().getTextChannelById(chNewsEntity.getId());
-                var chNewsAdd = MafiaBot.getGuild().getTextChannelById(chNewsAddEntity.getId());
+                var chNews = event.getGuild().getTextChannelById(chNewsEntity.getId());
+                var chNewsAdd = event.getGuild().getTextChannelById(chNewsAddEntity.getId());
 
                 if (!chNewsAdd.hasLatestMessage()) {
                     return;
@@ -149,7 +149,7 @@ public class MasterReceiverService {
             return;
         }
 
-        var cmd = command.split(" ");
+        var cmd = command.replaceAll("\\s+"," ").split(" ");
         var user = userService.findById(Long.parseLong(cmd[1]));
         if (user != null) {
             discordService.sendChat(event.getTextChannel(), user.getUserName() + " забанен " + userService.findById(user.getWhoBan().getId()).getUserName());
@@ -186,7 +186,7 @@ public class MasterReceiverService {
 
     @CommandName(names = {"грязь"})
     public void getMessages(MessageReceivedEvent event, String command) {
-        var nick = command.split(" ");
+        var nick = command.replaceAll("\\s+"," ").split(" ");
         if (discordService.isPresentRole(event, Role.MASTER) && nick.length > 1) {
             var name = nick[1];
             discordService.sendPrivateMessage(event.getMember(), messageService.getAllMessages(name));
@@ -269,7 +269,7 @@ public class MasterReceiverService {
         if (!discordService.isPresentRole(event, Role.MODERATOR)) {
             return;
         }
-        var spl = command.split(" ");
+        var spl = command.replaceAll("\\s+"," ").split(" ");
         if (spl.length < 3) {
             throw new DiscordException("Некорректно введена команда!");
         }
@@ -279,7 +279,7 @@ public class MasterReceiverService {
             var id = getId(player);
             var user = userService.findById(id);
             if (user == null) {
-                var member = MafiaBot.getGuild().getMemberById(id);
+                var member = event.getGuild().getMemberById(id);
                 if (member != null) {
                     user = userService.getOrNewUser(member);
                 }
@@ -300,7 +300,7 @@ public class MasterReceiverService {
             return;
         }
 
-        var spl = command.split(" ");
+        var spl = command.replaceAll("\\s+"," ").split(" ");
         if (spl.length < 2) {
             throw new DiscordException("Некорректно введена команда!");
         }
@@ -309,7 +309,7 @@ public class MasterReceiverService {
             var id = getId(player);
             var user = userService.findById(id);
             if (user == null) {
-                var member = MafiaBot.getGuild().getMemberById(id);
+                var member = event.getGuild().getMemberById(id);
                 if (member != null) {
                     user = userService.getOrNewUser(member);
                 }
@@ -331,7 +331,7 @@ public class MasterReceiverService {
         if (!discordService.isPresentRole(event, Role.MODERATOR)) {
             return;
         }
-        var spl = command.split(" ");
+        var spl = command.replaceAll("\\s+"," ").split(" ");
         if (spl.length < 3) {
             throw new DiscordException("Некорректно введена команда!");
         }
@@ -341,7 +341,7 @@ public class MasterReceiverService {
             var id = getId(player);
             var user = userService.findById(id);
             if (user == null) {
-                var member = MafiaBot.getGuild().getMemberById(id);
+                var member = event.getGuild().getMemberById(id);
                 if (member != null) {
                     user = userService.getOrNewUser(member);
                 }
@@ -362,7 +362,7 @@ public class MasterReceiverService {
             return;
         }
 
-        var spl = command.split(" ");
+        var spl = command.replaceAll("\\s+"," ").split(" ");
         if (spl.length < 2) {
             throw new DiscordException("Некорректно введена команда!");
         }
@@ -371,7 +371,7 @@ public class MasterReceiverService {
             var id = getId(player);
             var user = userService.findById(id);
             if (user == null) {
-                var member = MafiaBot.getGuild().getMemberById(id);
+                var member = event.getGuild().getMemberById(id);
                 if (member != null) {
                     user = userService.getOrNewUser(member);
                 }
@@ -393,7 +393,7 @@ public class MasterReceiverService {
             return;
         }
 
-        var spl = command.split(" ");
+        var spl = command.replaceAll("\\s+"," ").split(" ");
         if (spl.length < 2) {
             throw new DiscordException("Некорректно введена команда!");
         }
@@ -402,7 +402,7 @@ public class MasterReceiverService {
             var id = getId(player);
             var user = userService.findById(id);
             if (user == null) {
-                var member = MafiaBot.getGuild().getMemberById(id);
+                var member = event.getGuild().getMemberById(id);
                 if (member != null) {
                     user = userService.getOrNewUser(member);
                 }
@@ -423,7 +423,7 @@ public class MasterReceiverService {
             return;
         }
 
-        var spl = command.split(" ");
+        var spl = command.replaceAll("\\s+"," ").split(" ");
         if (spl.length < 2) {
             throw new DiscordException("Некорректно введена команда!");
         }
@@ -432,7 +432,7 @@ public class MasterReceiverService {
             var id = getId(player);
             var user = userService.findById(id);
             if (user == null) {
-                var member = MafiaBot.getGuild().getMemberById(id);
+                var member = event.getGuild().getMemberById(id);
                 if (member != null) {
                     user = userService.getOrNewUser(member);
                 }
@@ -453,7 +453,7 @@ public class MasterReceiverService {
             return;
         }
 
-        var spl = command.split(" ");
+        var spl = command.replaceAll("\\s+"," ").split(" ");
         if (spl.length < 2) {
             throw new DiscordException("Некорректно введена команда!");
         }
@@ -462,7 +462,7 @@ public class MasterReceiverService {
             var id = getId(player);
             var user = userService.findById(id);
             if (user == null) {
-                var member = MafiaBot.getGuild().getMemberById(id);
+                var member = event.getGuild().getMemberById(id);
                 if (member != null) {
                     user = userService.getOrNewUser(member);
                 }
@@ -483,7 +483,7 @@ public class MasterReceiverService {
             return;
         }
 
-        var spl = command.split(" ");
+        var spl = command.replaceAll("\\s+"," ").split(" ");
         if (spl.length < 2) {
             throw new DiscordException("Некорректно введена команда!");
         }
@@ -492,7 +492,7 @@ public class MasterReceiverService {
             var id = getId(player);
             var user = userService.findById(id);
             if (user == null) {
-                var member = MafiaBot.getGuild().getMemberById(id);
+                var member = event.getGuild().getMemberById(id);
                 if (member != null) {
                     user = userService.getOrNewUser(member);
                 }
@@ -513,7 +513,7 @@ public class MasterReceiverService {
             return;
         }
 
-        var spl = command.split(" ");
+        var spl = command.replaceAll("\\s+"," ").split(" ");
         if (spl.length < 2) {
             throw new DiscordException("Некорректно введена команда!");
         }
@@ -522,7 +522,7 @@ public class MasterReceiverService {
             var id = getId(player);
             var user = userService.findById(id);
             if (user == null) {
-                var member = MafiaBot.getGuild().getMemberById(id);
+                var member = event.getGuild().getMemberById(id);
                 if (member != null) {
                     user = userService.getOrNewUser(member);
                 }
@@ -543,7 +543,7 @@ public class MasterReceiverService {
             return;
         }
 
-        var spl = command.split(" ");
+        var spl = command.replaceAll("\\s+"," ").split(" ");
         if (spl.length < 2) {
             throw new DiscordException("Некорректно введена команда!");
         }
@@ -552,7 +552,7 @@ public class MasterReceiverService {
             var id = getId(player);
             var user = userService.findById(id);
             if (user == null) {
-                var member = MafiaBot.getGuild().getMemberById(id);
+                var member = event.getGuild().getMemberById(id);
                 if (member != null) {
                     user = userService.getOrNewUser(member);
                 }
@@ -573,7 +573,7 @@ public class MasterReceiverService {
             return;
         }
 
-        var spl = command.split(" ");
+        var spl = command.replaceAll("\\s+"," ").split(" ");
         if (spl.length < 2) {
             throw new DiscordException("Некорректно введена команда!");
         }
@@ -582,7 +582,7 @@ public class MasterReceiverService {
             var id = getId(player);
             var user = userService.findById(id);
             if (user == null) {
-                var member = MafiaBot.getGuild().getMemberById(id);
+                var member = event.getGuild().getMemberById(id);
                 if (member != null) {
                     user = userService.getOrNewUser(member);
                 }
@@ -603,7 +603,7 @@ public class MasterReceiverService {
                 null, null, rangService.getTopWinRate(), 30);
     }
 
-    @CommandName(names = {"топК"})
+    @CommandName(names = {"топк"})
     public void topK(MessageReceivedEvent event, String command) {
         discordService.sendChatEmbedTemp(event, "Топ игроков в мафию по классике",
                 null, null, rangService.getTopWinRateK(), 30);
@@ -611,7 +611,7 @@ public class MasterReceiverService {
 
     @CommandName(names = {"винрейт"})
     public void winrate(MessageReceivedEvent event, String command) {
-        var spl = command.split(" ");
+        var spl = command.replaceAll("\\s+"," ").split(" ");
         if (spl.length == 1) {
             discordService.sendChatEmbedTemp(event, "Ваш винрейт город",
                     null, null, rangService.getWinRate(userService.getOrNewUser(event.getMember())),30);
@@ -627,7 +627,7 @@ public class MasterReceiverService {
 
     @CommandName(names = {"винрейтк"})
     public void winrateK(MessageReceivedEvent event, String command) {
-        var spl = command.split(" ");
+        var spl = command.replaceAll("\\s+"," ").split(" ");
         if (spl.length == 1) {
             discordService.sendChatEmbedTemp(event, "Ваш винрейт классика",
                     null, null, rangService.getWinRateK(userService.getOrNewUser(event.getMember())),30);
@@ -643,7 +643,7 @@ public class MasterReceiverService {
 
     @CommandName(names = {"коины"})
     public void rate(MessageReceivedEvent event, String command) {
-        var spl = command.split(" ");
+        var spl = command.replaceAll("\\s+"," ").split(" ");
         if (spl.length == 1) {
             discordService.sendChatEmbedTemp(event, "Ваш баланс",
                     userService.getOrNewUser(event.getMember()).getRating() + "", null);
@@ -673,7 +673,7 @@ public class MasterReceiverService {
 
     @CommandName(names = {"отдать-коины"})
     public void gaveMoney(MessageReceivedEvent event, String command) {
-        var spl = command.split(" ");
+        var spl = command.replaceAll("\\s+"," ").split(" ");
         if (spl.length < 3) {
             return;
         }
@@ -688,9 +688,10 @@ public class MasterReceiverService {
                 return;
             }
             var from = "<@!" + event.getMember().getIdLong() + ">";
-            var sendedRate = userService.addRating(user, number,
+            var sendedRate = userService.addRating(event.getGuild(), user, number,
                     from, discordService);
-            var fallRate = userService.addRating(godUser, -1 * number, from, discordService);
+            godUser = userService.getOrNewUser(event.getMember());
+            var fallRate = userService.addRating(event.getGuild(), godUser, -1 * number, from, discordService);
 
             discordService.sendChatEmbed(event, ":moneybag: Баланс " + sendedRate.getUserName(), sendedRate.getRating() + "", null);
             discordService.sendChatEmbed(event, ":moneybag: Баланс " + fallRate.getUserName(), fallRate.getRating() + "", null);
@@ -702,11 +703,11 @@ public class MasterReceiverService {
         if (!discordService.isPresentRole(event, Role.MODERATOR)) {
             return;
         }
-        var spl = command.split(" ");
+        var spl = command.replaceAll("\\s+"," ").split(" ");
         if (spl.length == 2) {
             var number = getRate(spl, 1);
             var user = userService.getOrNewUser(event.getMember());
-            var newRate = userService.addRating(user, number,
+            var newRate = userService.addRating(event.getGuild(), user, number,
                     "<@!" + event.getMember().getIdLong() + ">", discordService).getRating();
             discordService.sendChatEmbed(event, "Ваш баланс", ":moneybag: " + newRate + "", null);
         } else if (spl.length > 2) {
@@ -715,7 +716,7 @@ public class MasterReceiverService {
                 discordService.sendChat(event.getTextChannel(), "Пользователь не найден!");
             } else {
                 var number = getRate(spl, 2);
-                var rate = userService.addRating(user, number,
+                var rate = userService.addRating(event.getGuild(), user, number,
                         "<@!" + event.getMember().getIdLong() + ">", discordService).getRating();
                 discordService.sendChatEmbed(event, "Баланс " + user.getUserName(), ":moneybag: " + rate + "", null);
             }
@@ -735,7 +736,7 @@ public class MasterReceiverService {
     @CommandName(names = {"телеграм"})
     public void telegram(MessageReceivedEvent event, String command) {
         if (discordService.isPresentRole(event, Role.MASTER)) {
-            this.tokenTelegramSession = command.split(" ")[1];
+            this.tokenTelegramSession = command.replaceAll("\\s+"," ").split(" ")[1];
             this.telegramMember = event.getMember();
         }
     }

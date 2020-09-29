@@ -61,12 +61,12 @@ public class DiscordService {
                 .anyMatch(roleDiscord -> quildRole.getId().equals(roleDiscord.getId()));
         if (isPresentRole) {
             guild.removeRoleFromMember(member, quildRole).queue(null, error -> {
-                toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
+                toLog(guild,"Exception", null, error.getMessage(), Color.RED.getRGB());
             });
             return ActionDo.REMOVE;
         } else {
             guild.addRoleToMember(member, quildRole).queue(null, error -> {
-                toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
+                toLog(guild,"Exception", null, error.getMessage(), Color.RED.getRGB());
             });
             return ActionDo.ADD;
         }
@@ -77,7 +77,7 @@ public class DiscordService {
         try {
             member.modifyNickname(newNickName).queue();
         } catch (HierarchyException ex) {
-            toLog("Exception", null, ex.getMessage(), Color.RED.getRGB());
+            toLog(member.getGuild(),"Exception", null, ex.getMessage(), Color.RED.getRGB());
         }
         return newNickName;
     }
@@ -121,7 +121,7 @@ public class DiscordService {
     public VoiceChannel getChannel(MessageReceivedEvent event) {
         try {
             return Optional.ofNullable(event.getMember())
-                    .orElse(MafiaBot.getGuild().getMember(event.getAuthor()))
+                    .orElse(event.getGuild().getMember(event.getAuthor()))
                     .getVoiceState().getChannel();
         } catch (NullPointerException e) {
             throw new DiscordException("Войс канал не найден или недостаточно прав!");
@@ -179,7 +179,7 @@ public class DiscordService {
         member.getUser().openPrivateChannel()
                 .queue(privateChannel -> privateChannel.sendMessage(new EmbedBuilder().setDescription(finalMsg).build())
                         .queue(null, error -> {
-                            toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
+                            toLog(member.getGuild(), "Exception", null, error.getMessage(), Color.RED.getRGB());
                         }));
         messageService.sendMessage(member, msg);
     }
@@ -190,7 +190,7 @@ public class DiscordService {
         }
         String finalMsg = msg;
         member.getUser().openPrivateChannel().queue(privateChannel -> privateChannel.sendMessage(finalMsg).queue(null, error -> {
-            toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
+            toLog(member.getGuild(), "Exception", null, error.getMessage(), Color.RED.getRGB());
         }));
         messageService.sendMessage(member, msg);
     }
@@ -201,7 +201,7 @@ public class DiscordService {
                 for (Emoji emoji : emojis) {
                     message.addReaction(emoji.getName())
                             .queue(null, error -> {
-                                toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
+                                toLog(channel.getGuild(), "Exception", null, error.getMessage(), Color.RED.getRGB());
                             });
                 }
             }
@@ -210,7 +210,7 @@ public class DiscordService {
 
     public void sendChat(TextChannel channel, String msg) {
         channel.sendMessage(msg).queue(null, error -> {
-            toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
+            toLog(channel.getGuild(), "Exception", null, error.getMessage(), Color.RED.getRGB());
         });
     }
 
@@ -225,7 +225,7 @@ public class DiscordService {
                 }
             }, seconds * 1000, 1);
         }, error -> {
-            toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
+            toLog(channel.getGuild(), "Exception", null, error.getMessage(), Color.RED.getRGB());
         });
     }
 
@@ -237,7 +237,7 @@ public class DiscordService {
     public void unmuteall(MessageReceivedEvent telegramSession) {
         getChannelPlayers(telegramSession).forEach(player -> {
             player.mute(false).queue(null, error -> {
-                toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
+                toLog(telegramSession.getGuild(), "Exception", null, error.getMessage(), Color.RED.getRGB());
             });
         });
     }
@@ -246,7 +246,7 @@ public class DiscordService {
         getChannelPlayers(telegramSession).forEach(player -> {
             if (player != telegramSession.getMember()) {
                 player.mute(true).queue(null, error -> {
-                    toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
+                    toLog(telegramSession.getGuild(), "Exception", null, error.getMessage(), Color.RED.getRGB());
                 });
             }
         });
@@ -256,7 +256,7 @@ public class DiscordService {
         getChannelPlayers(member.getVoiceState().getChannel()).forEach(player -> {
             if (player != member) {
                 player.mute(true).queue(null, error -> {
-                    toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
+                    toLog(member.getGuild(), "Exception", null, error.getMessage(), Color.RED.getRGB());
                 });
             }
         });
@@ -266,7 +266,7 @@ public class DiscordService {
         getChannelPlayers(member.getVoiceState().getChannel()).forEach(player -> {
             if (player != member) {
                 player.mute(false).queue(null, error -> {
-                    toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
+                    toLog(member.getGuild(), "Exception", null, error.getMessage(), Color.RED.getRGB());
                 });
             }
         });
@@ -284,7 +284,7 @@ public class DiscordService {
             }
         }
         event.getMessage().getChannel().sendMessage(embBuilder.build()).queue(null, error -> {
-            toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
+            toLog(event.getGuild(), "Exception", null, error.getMessage(), Color.RED.getRGB());
         });
     }
 
@@ -311,7 +311,7 @@ public class DiscordService {
             }, seconds * 1000, 1);
         }, error -> {
 
-            toLog("Exception", null, error.getMessage(), Color.RED.getRGB());
+            toLog(event.getGuild(), "Exception", null, error.getMessage(), Color.RED.getRGB());
         });
     }
 
@@ -329,7 +329,7 @@ public class DiscordService {
         } catch (Exception ignored) {
         }
         var footer = "Юзер: " + name + ", Канал: " + currentName;
-        toLog(title, footer, description, color);
+        toLog(event.getGuild(), title, footer, description, color);
 
     }
 
@@ -344,12 +344,12 @@ public class DiscordService {
         }
         var footer = "Юзер: " + name + ", Канал: " + currentName;
 
-        toLog(title, footer, description, color);
+        toLog(channel.getGuild(), title, footer, description, color);
     }
 
-    public void toLog(String title, String footer, String description, int color) {
+    public void toLog(Guild guild, String title, String footer, String description, int color) {
         try {
-            var channel = MafiaBot.getGuild()
+            var channel = guild
                     .getTextChannelsByName("log", true).stream().findFirst();
 
             if (channel.isEmpty()) {
@@ -477,7 +477,7 @@ public class DiscordService {
         }
         content = content.substring(content.indexOf("<") + 3, content.indexOf(">"));
 
-        MafiaBot.getGuild().retrieveMemberById(content).queue(findedMember -> {
+        message.getGuild().retrieveMemberById(content).queue(findedMember -> {
             if (findedMember != null) {
                 userService.getOrNewUser(findedMember);
                 userService.ban(findedMember, member, 999);
@@ -485,5 +485,15 @@ public class DiscordService {
             }
         });
 
+    }
+
+    public void sendToJoinRoom(String s, Guild guild) {
+        for (TextChannel textChannel : guild.getTextChannelsByName("⡇\uD83D\uDCEAпроходная", true)) {
+            var builder = new EmbedBuilder()
+                    .setTitle("Приглашение")
+                    .setDescription(s);
+
+            textChannel.sendMessage(builder.build()).queue();
+        }
     }
 }

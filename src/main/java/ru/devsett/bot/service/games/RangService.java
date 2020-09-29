@@ -64,7 +64,7 @@ public class RangService {
 
             raite = raite > 116 ? 116 : (int) raite;
             if (raite >= 1) {
-                userService.addRating(user, (int) raite, "Watchman", discordService);
+                userService.addRating(member.getGuild(), user, (int) raite, "Watchman", discordService);
             }
         } else {
             throw new DiscordException("WATCHMAN EXIT не найден");

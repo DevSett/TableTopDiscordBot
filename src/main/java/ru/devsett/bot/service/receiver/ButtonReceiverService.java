@@ -68,7 +68,7 @@ public class ButtonReceiverService extends ListenerAdapter {
             });
         } catch (Exception e) {
             log.error(e);
-            discordService.toLog("EmojiException", null, e.getMessage(), Color.RED.getRGB());
+            discordService.toLog(event.getGuild(), "EmojiException", null, e.getMessage(), Color.RED.getRGB());
         }
     }
 }

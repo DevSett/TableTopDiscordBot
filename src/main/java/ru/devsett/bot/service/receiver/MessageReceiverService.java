@@ -87,7 +87,7 @@ public class MessageReceiverService extends ListenerAdapter {
             if (desc.contains("Server bumped by") && desc.contains("<") && desc.contains(">")) {
                 var user = userService.findById(Long.parseLong(desc.substring(desc.indexOf("<") + 2, desc.indexOf(">"))));
                 if (user != null) {
-                    userService.addRating(user, 100, "!bump", discordService);
+                    userService.addRating(event.getGuild(), user, 100, "!bump", discordService);
                 }
             }
         } else {

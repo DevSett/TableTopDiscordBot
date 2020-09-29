@@ -1,5 +1,6 @@
 package ru.devsett.db.service.impl;
 
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
 import org.springframework.stereotype.Service;
@@ -55,13 +56,13 @@ public class UserService {
         return userRepository.findOneByUserName(nick).orElse(null);
     }
 
-    public UserEntity addRating(UserEntity user, Integer plus, String from, DiscordService discordService) {
+    public UserEntity addRating(Guild guild, UserEntity user, Integer plus, String from, DiscordService discordService) {
         var raite = user.getRating();
 
         user.setRating(raite == null ? 0 : user.getRating() + plus);
 
         var desc = ":moneybag: Для игрока <@!" + user.getId() + "> начислено " + plus + " мафкоинов от " + from;
-        discordService.toLog("Мафкоины", "Новый баланс: " + user.getRating(), desc, Role.DEFAULT_COLOR_RAW);
+        discordService.toLog(guild, "Мафкоины", "Новый баланс: " + user.getRating(), desc, Role.DEFAULT_COLOR_RAW);
         return userRepository.save(user);
     }
 

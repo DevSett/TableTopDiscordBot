@@ -34,7 +34,7 @@ public class DiscordConfig {
     private String buildTimestamp;
 
     public String getBuildVersionHide() {
-        return "1.03";
+        return "1.1";
     }
 
     @Bean
@@ -42,8 +42,9 @@ public class DiscordConfig {
         JDA jda = null;
         try {
             jda = JDABuilder.createDefault(token)
-                    .enableIntents(GatewayIntent.GUILD_MEMBERS)
                     .enableIntents(GatewayIntent.GUILD_MESSAGES)
+                    .enableIntents(GatewayIntent.GUILD_VOICE_STATES)
+                    .enableIntents(GatewayIntent.GUILD_MEMBERS)
                     .build();
         } catch (LoginException e) {
             log.error(e);
