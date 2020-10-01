@@ -74,7 +74,7 @@ public class MafiaService {
     @SneakyThrows
     private void modGameMember(Message msg, MessageReactionAddEvent event, String message, String emj, boolean b) {
         var memberId = Long.parseLong(message.substring(message.indexOf("<") + 3, message.indexOf(">")));
-        if (memberId != event.getMember().getIdLong() && event.getMember().getRoles().stream().noneMatch(role -> role.getName().equals(Role.SUPPORT.getName()))) {
+        if (memberId != event.getMember().getIdLong() && event.getMember().getRoles().stream().noneMatch(role -> role.getName().equals(Role.DEVELOPER.getName()))) {
             event.retrieveMessage().queue(msg2 -> {
                 msg2.removeReaction(event.getReactionEmote().getAsReactionCode(), event.getUser()).queue();
             });
