@@ -43,13 +43,13 @@ public class CasinoHalfCommand extends MyCommand {
         var value = utilService.getRate(splitArgs[0]);
         var user = userService.getOrNewUser(event.getMember());
 
-        if (value > user.getRating()) {
+        if (value > user.getRating() || value < 1) {
             commandEvent.reply("Недостаточно средств!");
             return;
         }
 
         if (random.nextInt(2) == 1) {
-            commandEvent.reply("Поздравляем вы выйграли " + value);
+            commandEvent.reply("Поздравляем вы выиграли " + value);
             userService.addRating(event.getGuild(), user, value, name, discordService);
         } else {
             commandEvent.reply("Упс, вы проиграли " + value);

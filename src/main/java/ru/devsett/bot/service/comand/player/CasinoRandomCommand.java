@@ -44,7 +44,7 @@ public class CasinoRandomCommand extends MyCommand {
         var value = utilService.getRate(splitArgs[1]);
         var user = userService.getOrNewUser(event.getMember());
 
-        if (value > user.getRating()) {
+        if (value > user.getRating() || value < 1) {
             commandEvent.reply("Недостаточно средств!");
             return;
         }
@@ -52,7 +52,7 @@ public class CasinoRandomCommand extends MyCommand {
         var casino = random.nextInt(11);
 
         if (casino == selectedNumber) {
-            commandEvent.reply("Выпало число "+ casino + "! Поздравляем вы выйграли " + value);
+            commandEvent.reply("Выпало число "+ casino + "! Поздравляем вы выйграли " + value*5);
             userService.addRating(event.getGuild(), user, value*4, name, discordService);
         } else {
             commandEvent.reply("Выпало число "+ casino + "! Упс, вы проиграли " + value);
