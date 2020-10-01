@@ -18,7 +18,6 @@ public class VersionCommand extends MyCommand {
         this.discordConfig = discordConfig;
         this.discordService = discordService;
 
-        this.requiredArgs = 1;
         this.requiredRole = Role.MODERATOR.getName();
     }
 
