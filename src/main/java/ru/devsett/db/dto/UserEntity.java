@@ -19,6 +19,7 @@ public class UserEntity {
     private String userName;
     @Getter(onMethod_ = {@Basic, @Column(name = "NICKNAME")})
     private String nickName;
+    @Deprecated
     @Getter(onMethod_ = {@Basic, @Column(name = "COIN")})
     private Long coin = 0l;
     @Getter(onMethod_ = {@Basic, @Column(name = "RATING")})

@@ -1,15 +1,12 @@
-package ru.devsett.bot.service.comand.mafia;
+package ru.devsett.bot.service.comand.player;
 
-import com.jagrosh.jdautilities.doc.standard.CommandInfo;
+import com.jagrosh.jdautilities.command.CommandEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.springframework.stereotype.Component;
 import ru.devsett.bot.service.DiscordService;
 import ru.devsett.bot.service.comand.MyCommand;
 import ru.devsett.db.service.impl.GameHistoryService;
 
-@CommandInfo(name = "Игра",
-        description = "Результат выбранной игры",
-        requirements = "Номер игры")
 @Component
 public class HistoryGameCommand extends MyCommand {
 
@@ -20,20 +17,34 @@ public class HistoryGameCommand extends MyCommand {
         this.gameHistoryService = gameHistoryService;
         this.discordService = discordService;
 
-        this.name = "игра";
-        this.help = "результат выбранной игры";
-        this.guildOnly = false;
+        this.requiredArgs = 1;
     }
 
     @Override
-    public void execute(MessageReceivedEvent event, String command) {
-        var cmd = command.replaceAll("\\s+"," ").split(" ");
-        Integer num = Integer.valueOf(cmd[1]);
+    public String name() {
+        return "игра";
+    }
+
+    @Override
+    public String help() {
+        return "результат выбранной игры мафии";
+    }
+
+    @Override
+    public void execute(MessageReceivedEvent event, String command, CommandEvent commandEvent) {
+        Integer num = Integer.valueOf(splitArgs[0]);
 
         var game = gameHistoryService.getGameById(num);
+
+        if (game == null) {
+            commandEvent.reply("Не найдена игра");
+            return;
+        }
 
         discordService.sendChatEmbedTemp(event, "Игра №"+num,
                 "Победа "+ (game.isWinRed()?"Красных":"Черных"),null);
     }
+
+
 
 }

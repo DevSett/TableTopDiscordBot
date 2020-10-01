@@ -21,7 +21,7 @@ public class GameHistoryService {
     }
 
     public GameHistoryEntity getGameById(Integer id ) {
-        return gameHistoryRepository.findById(Long.valueOf(id)).get();
+        return gameHistoryRepository.findById(Long.valueOf(id)).orElse(null);
     }
     public GameHistoryEntity addGame(List<Player> playerayers, boolean isClassic) {
         var game = new GameHistoryEntity();

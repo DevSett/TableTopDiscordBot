@@ -8,6 +8,7 @@ public enum  Role {
     MAFCLUB("Мафклуб"),
     MODERATOR("Модератор"),
     EXPERT("Опытный игрок"),
+    DEVELOPER("Разработчик"),
     ROLE_1("MAF I"),
     ROLE_2("MAF II"),
     ROLE_3("MAF III"),
