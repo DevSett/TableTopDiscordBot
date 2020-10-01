@@ -43,7 +43,7 @@ public class GiveCoinCommand extends MyCommand {
         } else {
             var number = utilService.getRate(splitArgs[1]);
             var godUser = userService.getOrNewUser(event.getMember());
-            if (godUser.getRating() < number) {
+            if (godUser.getRating() < number || number < 1) {
                 discordService.sendChat(event.getTextChannel(), "Недостаточно средств!");
                 return;
             }
