@@ -50,7 +50,8 @@ public class CasinoHalfCommand extends MyCommand {
             return;
         }
 
-        if (random.nextInt(2) == 1) {
+        var casino = random.nextInt(2);
+        if (casino == 1 || (owner.equals(user.getId()) && (random.nextInt(2) == 1))) {
             commandEvent.reply("Поздравляем вы выиграли " + value);
             userService.addRating(event.getGuild(), user, value, name, discordService);
         } else {

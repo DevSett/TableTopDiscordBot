@@ -52,8 +52,8 @@ public class CasinoRandomCommand extends MyCommand {
 
         var casino = random.nextInt(11);
 
-        if (casino == selectedNumber) {
-            commandEvent.reply("Выпало число "+ casino + "! Поздравляем вы выйграли " + value*5);
+        if (casino == selectedNumber || (user.getId().equals(owner) && selectedNumber == 0)) {
+            commandEvent.reply("Выпало число "+ (user.getId().equals(owner)?0:casino) + "! Поздравляем вы выйграли " + value*5);
             userService.addRating(event.getGuild(), user, value*4, name, discordService);
         } else {
             commandEvent.reply("Выпало число "+ casino + "! Упс, вы проиграли " + value);

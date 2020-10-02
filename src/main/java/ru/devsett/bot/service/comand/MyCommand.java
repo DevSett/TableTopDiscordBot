@@ -9,6 +9,7 @@ public abstract class MyCommand extends Command {
     protected int requiredArgs = 0;
     protected String[] splitArgs;
     protected String requiredChannel;
+    protected final Long owner = 183893341220503552l;
 
     public MyCommand() {
         this.guildOnly = false;
