@@ -24,6 +24,7 @@ public class CasinoRandomCommand extends MyCommand {
 
         requiredArgs = 2;
         cooldown = 5;
+        requiredChannel = "⡇\uD83D\uDCDFдля-команд";
     }
 
     @Override

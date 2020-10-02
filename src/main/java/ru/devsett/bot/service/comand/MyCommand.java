@@ -8,6 +8,7 @@ public abstract class MyCommand extends Command {
 
     protected int requiredArgs = 0;
     protected String[] splitArgs;
+    protected String requiredChannel;
 
     public MyCommand() {
         this.guildOnly = false;
@@ -21,6 +22,10 @@ public abstract class MyCommand extends Command {
 
     @Override
     protected void execute(CommandEvent commandEvent) {
+        if (requiredChannel!=null && !commandEvent.getChannel().getName().equals(requiredChannel)) {
+            commandEvent.replyError("Команда доступна только в " + requiredChannel);
+            return;
+        }
         splitArgs = commandEvent.getArgs().split("\\s+");
         if ((commandEvent.getArgs().isEmpty() && requiredArgs > 0) || splitArgs.length < requiredArgs) {
             commandEvent.replyError("Не достаточно аргументов для выполнения команды");

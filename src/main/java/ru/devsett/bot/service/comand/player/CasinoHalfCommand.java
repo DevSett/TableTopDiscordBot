@@ -1,5 +1,6 @@
 package ru.devsett.bot.service.comand.player;
 
+import com.jagrosh.jdautilities.command.Command;
 import com.jagrosh.jdautilities.command.CommandEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.springframework.stereotype.Component;
@@ -24,6 +25,7 @@ public class CasinoHalfCommand extends MyCommand {
 
         requiredArgs = 1;
         cooldown = 5;
+        requiredChannel = "⡇\uD83D\uDCDFдля-команд";
     }
 
     @Override
