@@ -350,7 +350,7 @@ public class DiscordService {
     public void toLog(Guild guild, String title, String footer, String description, int color) {
         try {
             var channel = guild
-                    .getTextChannelsByName("log", true).stream().findFirst();
+                    .getTextChannelsByName("mylog", true).stream().findFirst();
 
             if (channel.isEmpty()) {
                 return;
