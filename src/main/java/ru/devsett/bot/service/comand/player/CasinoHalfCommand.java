@@ -28,7 +28,7 @@ public class CasinoHalfCommand extends MyCommand {
         this.bankService = bankService;
 
         requiredArgs = 1;
-        cooldown = 5;
+        cooldown = 10;
         requiredChannel = "⡇\uD83D\uDCDFдля-команд";
     }
 
