@@ -55,6 +55,11 @@ public class JackpotCommand extends MyCommand {
             return;
         }
 
+        if (userEntityList.size() < 2) {
+            commandEvent.reply("Недостаточно участников!");
+            return;
+        }
+
         if (100 > user.getRating()) {
             commandEvent.reply("Недостаточно средств!");
             return;
@@ -64,11 +69,6 @@ public class JackpotCommand extends MyCommand {
             user = userService.addRating(event.getGuild(), user, -100, "JackPot", discordService);
             userEntityList.add(user);
             commandEvent.reply("Вы кинули в копилку джекпота 100 и купили билет!");
-            return;
-        }
-
-        if (userEntityList.size() < 2) {
-            commandEvent.reply("Недостаточно участников!");
             return;
         }
     }
