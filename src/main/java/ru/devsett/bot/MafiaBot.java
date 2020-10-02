@@ -62,6 +62,8 @@ public class MafiaBot {
     private final TopSityCommand topSityCommand;
     private final WinRateCityCommand winRateCityCommand;
     private final WinRateClassicCommand winRateClassicCommand;
+    private final JackpotCommand jackpotCommand;
+    private final BankCommand bankCommand;
 
 
     @Getter
@@ -82,7 +84,7 @@ public class MafiaBot {
                     VersionCommand versionCommand, BalanceCommand balanceCommand, CasinoHalfCommand casinoHalfCommand,
                     CasinoRandomCommand casinoRandomCommand, GiveCoinCommand giveCoinCommand, HistoryGameCommand historyGameCommand,
                     KissCommand kissCommand, TopClassicCommand topClassicCommand, TopCoinCommand topCoinCommand, TopSityCommand topSityCommand,
-                    WinRateCityCommand winRateCityCommand, WinRateClassicCommand winRateClassicCommand) {
+                    WinRateCityCommand winRateCityCommand, WinRateClassicCommand winRateClassicCommand, JackpotCommand jackpotCommand, BankCommand bankCommand) {
         this.discordClient = discordClient;
         this.buttonReceiverService = buttonReceiverService;
         this.joinReceiverService = joinReceiverService;
@@ -120,6 +122,8 @@ public class MafiaBot {
         this.topSityCommand = topSityCommand;
         this.winRateCityCommand = winRateCityCommand;
         this.winRateClassicCommand = winRateClassicCommand;
+        this.jackpotCommand = jackpotCommand;
+        this.bankCommand = bankCommand;
     }
 
     @SneakyThrows
@@ -162,7 +166,9 @@ public class MafiaBot {
                 this.winRateCityCommand,
                 this.winRateClassicCommand,
                 this.kissCommand,
-                this.giveCoinCommand);
+                this.giveCoinCommand,
+                this.jackpotCommand,
+                this.bankCommand);
         discordClient.addEventListener(voiceReceiverService, buttonReceiverService, joinReceiverService,
                 commandClientBuilder.build());
 

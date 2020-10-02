@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import ru.devsett.bot.service.DiscordService;
 import ru.devsett.bot.service.comand.MyCommand;
 import ru.devsett.bot.service.util.UtilService;
+import ru.devsett.db.service.impl.BankService;
 import ru.devsett.db.service.impl.UserService;
 
 import java.security.SecureRandom;
@@ -16,11 +17,13 @@ public class CasinoRandomCommand extends MyCommand {
     private final DiscordService discordService;
     private final UserService userService;
     private final UtilService utilService;
+    private final BankService bankService;
 
-    public CasinoRandomCommand(DiscordService discordService, UserService userService, UtilService utilService) {
+    public CasinoRandomCommand(DiscordService discordService, UserService userService, UtilService utilService, BankService bankService) {
         this.userService = userService;
         this.utilService = utilService;
         this.discordService = discordService;
+        this.bankService = bankService;
 
         requiredArgs = 2;
         cooldown = 5;
@@ -54,9 +57,17 @@ public class CasinoRandomCommand extends MyCommand {
 
         if (casino == selectedNumber || (user.getId().equals(owner) && selectedNumber == 0)) {
             commandEvent.reply("Выпало число "+ (user.getId().equals(owner)?0:casino) + "! Поздравляем вы выйграли " + value*5);
+            if (!owner.equals(user.getId())) {
+                bankService.addWinBank(Long.valueOf(value));
+                bankService.addBalanceBank(value * -1L);
+            }
             userService.addRating(event.getGuild(), user, value*4, name, discordService);
         } else {
             commandEvent.reply("Выпало число "+ casino + "! Упс, вы проиграли " + value);
+            if (!owner.equals(user.getId())) {
+                bankService.addLoseBank(Long.valueOf(value));
+                bankService.addBalanceBank(value * 1L);
+            }
             userService.addRating(event.getGuild(), user, -1 * value, name, discordService);
         }
     }
