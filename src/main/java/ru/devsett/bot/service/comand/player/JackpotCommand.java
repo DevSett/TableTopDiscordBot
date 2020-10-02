@@ -26,8 +26,6 @@ public class JackpotCommand extends MyCommand {
         this.userService = userService;
         this.utilService = utilService;
         this.discordService = discordService;
-
-        requiredChannel = "⡇\uD83D\uDCDFдля-команд";
     }
 
     @Override
