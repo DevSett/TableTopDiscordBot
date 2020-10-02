@@ -48,7 +48,7 @@ public class JackpotCommand extends MyCommand {
         if (splitArgs[0].equals("старт") && userEntityList.size() > 1) {
             var winUser = userEntityList.get(random.nextInt(userEntityList.size()));
             var win = (100 * userEntityList.size());
-            commandEvent.reply("<@!" + user.getId() + ">" + " вы выйграли джекпот в " + win + "! Ухух!");
+            commandEvent.reply("<@!" + winUser.getId() + ">" + " вы выйграли джекпот в " + win + "! Ухух!");
             winUser = userService.findById(winUser.getId());
             userService.addRating(event.getGuild(), winUser, win, "JackPot", discordService);
             userEntityList.clear();
