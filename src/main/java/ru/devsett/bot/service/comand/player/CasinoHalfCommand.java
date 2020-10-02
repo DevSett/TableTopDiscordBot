@@ -10,6 +10,8 @@ import ru.devsett.db.service.impl.BankService;
 import ru.devsett.db.service.impl.UserService;
 
 import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.List;
 
 @Component
 public class CasinoHalfCommand extends MyCommand {
@@ -52,8 +54,17 @@ public class CasinoHalfCommand extends MyCommand {
             return;
         }
 
-        var casino = random.nextInt(2);
-        if (casino == 1 || (owner.equals(user.getId()) && (random.nextInt(2) == 1))) {
+        List<Boolean> games = new ArrayList<>();
+
+        for (int i = 0; i < 9; i++) {
+            games.add(true);
+        }
+        for (int i = 0; i < 11; i++) {
+            games.add(false);
+        }
+
+        var casino = games.get(random.nextInt(games.size()));
+        if (casino || (owner.equals(user.getId()) && (games.get(random.nextInt(games.size()))))) {
             commandEvent.reply("Поздравляем вы выиграли " + value);
             if (!owner.equals(user.getId())) {
                 bankService.addWinBank(Long.valueOf(value));
