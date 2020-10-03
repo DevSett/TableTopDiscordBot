@@ -55,7 +55,7 @@ public class JackpotCommand extends MyCommand {
             return;
         }
 
-        if (userEntityList.size() < 2) {
+        if (userEntityList.size() < 2 && splitArgs[0].equals("старт")) {
             commandEvent.reply("Недостаточно участников!");
             return;
         }
@@ -71,5 +71,7 @@ public class JackpotCommand extends MyCommand {
             commandEvent.reply("Вы кинули в копилку джекпота 100 и купили билет!");
             return;
         }
+
+
     }
 }
