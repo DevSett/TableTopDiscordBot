@@ -55,7 +55,8 @@ public class GameHistoryService {
         }
 
         return entityManager
-                .createQuery("select hh.id from WhoPlayerHistoryEntity hh where hh.player = :player and hh.redPlayer = true order by hh.gameHistoryEntity.id desc")
+                .createQuery("select hh.gameHistoryEntity.id from WhoPlayerHistoryEntity hh " +
+                        "where hh.player = :player and hh.redPlayer = true order by hh.gameHistoryEntity.id desc")
                 .setMaxResults(5)
                 .setParameter("player", userEntity)
                 .getResultList();
@@ -67,11 +68,13 @@ public class GameHistoryService {
         }
 
         return entityManager
-                .createQuery("select hh.id from WhoPlayerHistoryEntity hh where hh.player = :player and hh.redPlayer = false order by hh.gameHistoryEntity.id desc")
+                .createQuery("select hh.gameHistoryEntity.id from WhoPlayerHistoryEntity hh " +
+                        "where hh.player = :player and hh.redPlayer = false order by hh.gameHistoryEntity.id desc")
                 .setMaxResults(5)
                 .setParameter("player", userEntity)
                 .getResultList();
     }
+
     public GameHistoryEntity getGameById(Integer id) {
         return gameHistoryRepository.findById(Long.valueOf(id)).orElse(null);
     }
