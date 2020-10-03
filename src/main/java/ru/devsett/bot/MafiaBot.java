@@ -70,7 +70,7 @@ public class MafiaBot {
     private final CancelCityCommand cancelCityCommand;
     private final CancelClassicCommand cancelClassicCommand;
     private final LastGamesCommand lastGamesCommand;
-
+    private final MessageReceiverService messageReceiverService;
 
     @Getter
     private static JDA jda;
@@ -90,7 +90,7 @@ public class MafiaBot {
                     VersionCommand versionCommand, BalanceCommand balanceCommand, CasinoHalfCommand casinoHalfCommand,
                     CasinoRandomCommand casinoRandomCommand, GiveCoinCommand giveCoinCommand, HistoryGameCommand historyGameCommand,
                     KissCommand kissCommand, TopClassicCommand topClassicCommand, TopCoinCommand topCoinCommand, TopSityCommand topSityCommand,
-                    WinRateCityCommand winRateCityCommand, WinRateClassicCommand winRateClassicCommand, JackpotCommand jackpotCommand, BankCommand bankCommand, ChangeWinCityCommand changeWinCityCommand, ChangeWinClassicCommand changeWinClassicCommand, CancelCityCommand cancelCityCommand, CancelClassicCommand cancelClassicCommand, LastGamesCommand lastGamesCommand) {
+                    WinRateCityCommand winRateCityCommand, WinRateClassicCommand winRateClassicCommand, JackpotCommand jackpotCommand, BankCommand bankCommand, ChangeWinCityCommand changeWinCityCommand, ChangeWinClassicCommand changeWinClassicCommand, CancelCityCommand cancelCityCommand, CancelClassicCommand cancelClassicCommand, LastGamesCommand lastGamesCommand, MessageReceiverService messageReceiverService) {
         this.discordClient = discordClient;
         this.buttonReceiverService = buttonReceiverService;
         this.joinReceiverService = joinReceiverService;
@@ -135,6 +135,7 @@ public class MafiaBot {
         this.cancelCityCommand = cancelCityCommand;
         this.cancelClassicCommand = cancelClassicCommand;
         this.lastGamesCommand = lastGamesCommand;
+        this.messageReceiverService = messageReceiverService;
     }
 
     @SneakyThrows
@@ -184,9 +185,10 @@ public class MafiaBot {
                 this.changeWinClassicCommand,
                 this.cancelCityCommand,
                 this.cancelClassicCommand,
-                this.lastGamesCommand);
+                this.lastGamesCommand
+                );
 
-        discordClient.addEventListener(voiceReceiverService, buttonReceiverService, joinReceiverService,
+        discordClient.addEventListener(messageReceiverService, voiceReceiverService, buttonReceiverService, joinReceiverService,
                 commandClientBuilder.build());
 
         discordClient.awaitReady();
