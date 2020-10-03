@@ -153,4 +153,60 @@ public class WinRateService implements WinRateInterface<WinRateEntity> {
         rate.setMafiaMaster(Optional.ofNullable(rate.getMafiaMaster()).orElse(0L)+1);
         return winRateRepository.save(rate);
     }
+
+    @Override
+    public WinRateEntity removeDonWin(UserEntity donPlayer) {
+        var rate = getOrNewWinRate(donPlayer);
+        rate.setMafiaWinDon(rate.getMafiaWinDon() - 1);
+        return winRateRepository.save(rate);
+    }
+
+    @Override
+    public WinRateEntity removeSheriffLose(UserEntity sheriffPlayer) {
+        var rate = getOrNewWinRate(sheriffPlayer);
+        rate.setMafiaLoseSheriff(rate.getMafiaLoseSheriff() - 1);
+        return winRateRepository.save(rate);
+    }
+
+    @Override
+    public WinRateEntity removeRedLose(UserEntity player) {
+        var rate = getOrNewWinRate(player);
+        rate.setMafiaLoseRed(rate.getMafiaLoseRed() - 1);
+        return winRateRepository.save(rate);
+    }
+
+    @Override
+    public WinRateEntity removeBlackWin(UserEntity player) {
+        var rate = getOrNewWinRate(player);
+        rate.setMafiaWinBlack(rate.getMafiaWinBlack() - 1);
+        return winRateRepository.save(rate);
+    }
+
+    @Override
+    public WinRateEntity removeDonLose(UserEntity donPlayer) {
+        var rate = getOrNewWinRate(donPlayer);
+        rate.setMafiaLoseDon(rate.getMafiaLoseDon() - 1);
+        return winRateRepository.save(rate);
+    }
+
+    @Override
+    public WinRateEntity removeSheriffWin(UserEntity sheriffPlayer) {
+        var rate = getOrNewWinRate(sheriffPlayer);
+        rate.setMafiaWinSheriff(rate.getMafiaWinSheriff() - 1);
+        return winRateRepository.save(rate);
+    }
+
+    @Override
+    public WinRateEntity removeRedWin(UserEntity player) {
+        var rate = getOrNewWinRate(player);
+        rate.setMafiaWinRed(rate.getMafiaWinRed() - 1);
+        return winRateRepository.save(rate);
+    }
+
+    @Override
+    public WinRateEntity removeBlackLose(UserEntity player) {
+        var rate = getOrNewWinRate(player);
+        rate.setMafiaLoseBlack(rate.getMafiaLoseBlack() - 1);
+        return winRateRepository.save(rate);
+    }
 }

@@ -11,6 +11,7 @@ import ru.devsett.bot.service.comand.developer.ClearDontStopGameCommand;
 import ru.devsett.bot.service.comand.developer.ClearTypeCommand;
 import ru.devsett.bot.service.comand.developer.MasterMafiaCommand;
 import ru.devsett.bot.service.comand.developer.game.city.*;
+import ru.devsett.bot.service.comand.developer.game.city.CancelCityCommand;
 import ru.devsett.bot.service.comand.developer.game.classic.*;
 import ru.devsett.bot.service.comand.moderator.DirtyCommand;
 import ru.devsett.bot.service.comand.moderator.VersionCommand;
@@ -64,6 +65,11 @@ public class MafiaBot {
     private final WinRateClassicCommand winRateClassicCommand;
     private final JackpotCommand jackpotCommand;
     private final BankCommand bankCommand;
+    private final ChangeWinCityCommand changeWinCityCommand;
+    private final ChangeWinClassicCommand changeWinClassicCommand;
+    private final CancelCityCommand cancelCityCommand;
+    private final CancelClassicCommand cancelClassicCommand;
+    private final LastGamesCommand lastGamesCommand;
 
 
     @Getter
@@ -84,7 +90,7 @@ public class MafiaBot {
                     VersionCommand versionCommand, BalanceCommand balanceCommand, CasinoHalfCommand casinoHalfCommand,
                     CasinoRandomCommand casinoRandomCommand, GiveCoinCommand giveCoinCommand, HistoryGameCommand historyGameCommand,
                     KissCommand kissCommand, TopClassicCommand topClassicCommand, TopCoinCommand topCoinCommand, TopSityCommand topSityCommand,
-                    WinRateCityCommand winRateCityCommand, WinRateClassicCommand winRateClassicCommand, JackpotCommand jackpotCommand, BankCommand bankCommand) {
+                    WinRateCityCommand winRateCityCommand, WinRateClassicCommand winRateClassicCommand, JackpotCommand jackpotCommand, BankCommand bankCommand, ChangeWinCityCommand changeWinCityCommand, ChangeWinClassicCommand changeWinClassicCommand, CancelCityCommand cancelCityCommand, CancelClassicCommand cancelClassicCommand, LastGamesCommand lastGamesCommand) {
         this.discordClient = discordClient;
         this.buttonReceiverService = buttonReceiverService;
         this.joinReceiverService = joinReceiverService;
@@ -124,6 +130,11 @@ public class MafiaBot {
         this.winRateClassicCommand = winRateClassicCommand;
         this.jackpotCommand = jackpotCommand;
         this.bankCommand = bankCommand;
+        this.changeWinCityCommand = changeWinCityCommand;
+        this.changeWinClassicCommand = changeWinClassicCommand;
+        this.cancelCityCommand = cancelCityCommand;
+        this.cancelClassicCommand = cancelClassicCommand;
+        this.lastGamesCommand = lastGamesCommand;
     }
 
     @SneakyThrows
@@ -168,7 +179,13 @@ public class MafiaBot {
                 this.kissCommand,
                 this.giveCoinCommand,
                 this.jackpotCommand,
-                this.bankCommand);
+                this.bankCommand,
+                this.changeWinCityCommand,
+                this.changeWinClassicCommand,
+                this.cancelCityCommand,
+                this.cancelClassicCommand,
+                this.lastGamesCommand);
+
         discordClient.addEventListener(voiceReceiverService, buttonReceiverService, joinReceiverService,
                 commandClientBuilder.build());
 

@@ -41,4 +41,20 @@ public interface WinRateInterface<T> {
     public T addMiss(UserEntity user, Integer count);
 
     public T addMaster(UserEntity user);
+
+    public T removeDonWin(UserEntity donPlayer);
+
+    public T removeSheriffLose(UserEntity player);
+
+    public T removeRedLose(UserEntity player);
+
+    public T removeBlackWin(UserEntity player);
+
+    public T removeDonLose(UserEntity donPlayer);
+
+    public T removeSheriffWin(UserEntity sheriffPlayer);
+
+    public T removeRedWin(UserEntity player);
+
+    public T removeBlackLose(UserEntity player);
 }

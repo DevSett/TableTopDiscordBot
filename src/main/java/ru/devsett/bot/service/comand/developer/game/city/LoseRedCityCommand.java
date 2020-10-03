@@ -54,7 +54,7 @@ public class LoseRedCityCommand extends MyCommand {
 
     @Override
     public String name() {
-        return "п-крансые";
+        return "п-красные";
     }
 
 

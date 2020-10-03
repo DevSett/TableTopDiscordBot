@@ -3,6 +3,7 @@ package ru.devsett.db.service.impl;
 import org.springframework.stereotype.Service;
 import ru.devsett.db.dto.UserEntity;
 import ru.devsett.db.dto.WinRateClassicEntity;
+import ru.devsett.db.dto.WinRateEntity;
 import ru.devsett.db.repository.WinRateClassicRepository;
 import ru.devsett.db.service.WinRateInterface;
 
@@ -152,6 +153,62 @@ public class WinRateClassicService implements WinRateInterface<WinRateClassicEnt
     public WinRateClassicEntity addMaster(UserEntity user) {
         var rate = getOrNewWinRate(user);
         rate.setMafiaMaster(Optional.ofNullable(rate.getMafiaMaster()).orElse(0L)+1);
+        return winRateClassicRepository.save(rate);
+    }
+
+    @Override
+    public WinRateClassicEntity removeDonWin(UserEntity donPlayer) {
+        var rate = getOrNewWinRate(donPlayer);
+        rate.setMafiaWinDon(rate.getMafiaWinDon() - 1);
+        return winRateClassicRepository.save(rate);
+    }
+
+    @Override
+    public WinRateClassicEntity removeSheriffLose(UserEntity sheriffPlayer) {
+        var rate = getOrNewWinRate(sheriffPlayer);
+        rate.setMafiaLoseSheriff(rate.getMafiaLoseSheriff() - 1);
+        return winRateClassicRepository.save(rate);
+    }
+
+    @Override
+    public WinRateClassicEntity removeRedLose(UserEntity player) {
+        var rate = getOrNewWinRate(player);
+        rate.setMafiaLoseRed(rate.getMafiaLoseRed() - 1);
+        return winRateClassicRepository.save(rate);
+    }
+
+    @Override
+    public WinRateClassicEntity removeBlackWin(UserEntity player) {
+        var rate = getOrNewWinRate(player);
+        rate.setMafiaWinBlack(rate.getMafiaWinBlack() - 1);
+        return winRateClassicRepository.save(rate);
+    }
+
+    @Override
+    public WinRateClassicEntity removeDonLose(UserEntity donPlayer) {
+        var rate = getOrNewWinRate(donPlayer);
+        rate.setMafiaLoseDon(rate.getMafiaLoseDon() - 1);
+        return winRateClassicRepository.save(rate);
+    }
+
+    @Override
+    public WinRateClassicEntity removeSheriffWin(UserEntity sheriffPlayer) {
+        var rate = getOrNewWinRate(sheriffPlayer);
+        rate.setMafiaWinSheriff(rate.getMafiaWinSheriff() - 1);
+        return winRateClassicRepository.save(rate);
+    }
+
+    @Override
+    public WinRateClassicEntity removeRedWin(UserEntity player) {
+        var rate = getOrNewWinRate(player);
+        rate.setMafiaWinRed(rate.getMafiaWinRed() - 1);
+        return winRateClassicRepository.save(rate);
+    }
+
+    @Override
+    public WinRateClassicEntity removeBlackLose(UserEntity player) {
+        var rate = getOrNewWinRate(player);
+        rate.setMafiaLoseBlack(rate.getMafiaLoseBlack() - 1);
         return winRateClassicRepository.save(rate);
     }
 }

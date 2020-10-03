@@ -55,7 +55,7 @@ public class LoseRedClassicCommand extends MyCommand {
 
     @Override
     public String name() {
-        return "п-крансыек";
+        return "п-красныек";
     }
 
 
