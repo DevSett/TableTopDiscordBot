@@ -35,6 +35,4 @@ public class TopClassicCommand extends MyCommand {
                 null, null, rangService.getTopWinRateK(), 30);
     }
 
-
-
 }

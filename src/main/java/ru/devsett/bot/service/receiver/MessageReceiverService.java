@@ -3,7 +3,10 @@ package ru.devsett.bot.service.receiver;
 import lombok.extern.log4j.Log4j2;
 import net.dv8tion.jda.api.entities.ChannelType;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.events.guild.voice.GuildVoiceStreamEvent;
+import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
@@ -15,6 +18,7 @@ import ru.devsett.config.DiscordConfig;
 import ru.devsett.db.service.impl.ChannelService;
 import ru.devsett.db.service.impl.UserService;
 
+import javax.annotation.Nonnull;
 import java.awt.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -42,6 +46,19 @@ public class MessageReceiverService extends ListenerAdapter {
     @Override
     public void onMessageReceived(@NotNull MessageReceivedEvent event) {
         consume(event);
+        event.getMessage().delete().queue();
+    }
+
+    @Override
+    public void onGuildVoiceStream(@Nonnull GuildVoiceStreamEvent event) {
+    }
+
+    @Override
+    public void onGuildVoiceUpdate(@Nonnull GuildVoiceUpdateEvent event) {
+    }
+
+    @Override
+    public void onGuildMessageReceived(@Nonnull GuildMessageReceivedEvent event) {
     }
 
     public void consume(MessageReceivedEvent event) {

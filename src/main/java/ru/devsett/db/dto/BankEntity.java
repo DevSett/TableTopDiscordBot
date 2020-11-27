@@ -18,6 +18,12 @@ public class BankEntity{
     @Getter(onMethod_ = {@Basic, @Column(name = "BALANCE")})
     private Long balance = 0l;
 
+    @Getter(onMethod_ = {@Basic, @Column(name = "REQUIRED_BALANCE")})
+    private Long requiredBalance = 0l;
+
+    @Getter(onMethod_ = {@Basic, @Column(name = "NAME_EVENT")})
+    private String nameEvent;
+
     @Getter(onMethod_ = {@Basic, @Column(name = "LOSE_MONEY")})
     private Long loseMoneyCasino = 0l;
 
@@ -31,12 +37,13 @@ public class BankEntity{
         BankEntity that = (BankEntity) o;
         return Objects.equals(id, that.id) &&
                 Objects.equals(balance, that.balance) &&
+                Objects.equals(requiredBalance, that.requiredBalance) &&
                 Objects.equals(loseMoneyCasino, that.loseMoneyCasino) &&
                 Objects.equals(winMoneyCasino, that.winMoneyCasino);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, balance, loseMoneyCasino, winMoneyCasino);
+        return Objects.hash(id, balance, requiredBalance, loseMoneyCasino, winMoneyCasino);
     }
 }

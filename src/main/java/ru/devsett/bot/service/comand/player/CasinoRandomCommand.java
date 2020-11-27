@@ -56,7 +56,7 @@ public class CasinoRandomCommand extends MyCommand {
         var casino = random.nextInt(11);
 
         if (casino == selectedNumber || (user.getId().equals(owner) && selectedNumber == 0)) {
-            commandEvent.reply("Выпало число "+ (user.getId().equals(owner)?0:casino) + "! Поздравляем вы выйграли " + value*5);
+            commandEvent.reply("Выпало число "+ (user.getId().equals(owner) && casino != selectedNumber? 0:casino) + "! Поздравляем вы выйграли " + value*5);
             if (!owner.equals(user.getId())) {
                 bankService.addWinBank(Long.valueOf(value));
                 bankService.addBalanceBank(value * -1L);

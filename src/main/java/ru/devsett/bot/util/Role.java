@@ -14,7 +14,8 @@ public enum  Role {
     ROLE_3("MAF III"),
     ROLE_4("MAF IV"),
     ROLE_5("MAF V"),
-    BAN("Бан");
+    BAN("Бан"),
+    BANKIR("💰Банкир");
 
     private String name;
 

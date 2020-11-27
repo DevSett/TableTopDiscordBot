@@ -6,14 +6,13 @@ import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
 import net.dv8tion.jda.api.JDA;
 import org.springframework.stereotype.Service;
-import ru.devsett.bot.service.comand.developer.AddCoinCommand;
-import ru.devsett.bot.service.comand.developer.ClearDontStopGameCommand;
-import ru.devsett.bot.service.comand.developer.ClearTypeCommand;
-import ru.devsett.bot.service.comand.developer.MasterMafiaCommand;
+import ru.devsett.bot.service.comand.bankir.*;
+import ru.devsett.bot.service.comand.developer.*;
 import ru.devsett.bot.service.comand.developer.game.city.*;
 import ru.devsett.bot.service.comand.developer.game.city.CancelCityCommand;
 import ru.devsett.bot.service.comand.developer.game.classic.*;
 import ru.devsett.bot.service.comand.moderator.DirtyCommand;
+import ru.devsett.bot.service.comand.moderator.EnableWebCamCommand;
 import ru.devsett.bot.service.comand.moderator.VersionCommand;
 import ru.devsett.bot.service.comand.player.*;
 import ru.devsett.bot.service.receiver.*;
@@ -71,6 +70,13 @@ public class MafiaBot {
     private final CancelClassicCommand cancelClassicCommand;
     private final LastGamesCommand lastGamesCommand;
     private final MessageReceiverService messageReceiverService;
+    private final AddBankEventCommand addBankEventCommand;
+    private final BankEventCommand bankEventCommand;
+    private final ClearBankEventCommand clearBankEventCommand;
+    private final EnableWebCamCommand enableWebCamCommand;
+    private final GetBankCoinsCommand getBankCoinsCommand;
+    private final SetBankEventCommand setBankEventCommand;
+    private final SetNameEventCommand setNameEventCommand;
 
     @Getter
     private static JDA jda;
@@ -90,7 +96,14 @@ public class MafiaBot {
                     VersionCommand versionCommand, BalanceCommand balanceCommand, CasinoHalfCommand casinoHalfCommand,
                     CasinoRandomCommand casinoRandomCommand, GiveCoinCommand giveCoinCommand, HistoryGameCommand historyGameCommand,
                     KissCommand kissCommand, TopClassicCommand topClassicCommand, TopCoinCommand topCoinCommand, TopSityCommand topSityCommand,
-                    WinRateCityCommand winRateCityCommand, WinRateClassicCommand winRateClassicCommand, JackpotCommand jackpotCommand, BankCommand bankCommand, ChangeWinCityCommand changeWinCityCommand, ChangeWinClassicCommand changeWinClassicCommand, CancelCityCommand cancelCityCommand, CancelClassicCommand cancelClassicCommand, LastGamesCommand lastGamesCommand, MessageReceiverService messageReceiverService) {
+                    WinRateCityCommand winRateCityCommand, WinRateClassicCommand winRateClassicCommand, JackpotCommand jackpotCommand,
+                    BankCommand bankCommand, ChangeWinCityCommand changeWinCityCommand,
+                    ChangeWinClassicCommand changeWinClassicCommand, CancelCityCommand cancelCityCommand,
+                    CancelClassicCommand cancelClassicCommand, LastGamesCommand lastGamesCommand,
+                    MessageReceiverService messageReceiverService, AddBankEventCommand addBankEventCommand,
+                    BankEventCommand bankEventCommand, ClearBankEventCommand clearBankEventCommand,
+                    EnableWebCamCommand enableWebCamCommand, GetBankCoinsCommand getBankCoinsCommand,
+                    SetBankEventCommand setBankEventCommand, SetNameEventCommand setNameEventCommand) {
         this.discordClient = discordClient;
         this.buttonReceiverService = buttonReceiverService;
         this.joinReceiverService = joinReceiverService;
@@ -136,6 +149,13 @@ public class MafiaBot {
         this.cancelClassicCommand = cancelClassicCommand;
         this.lastGamesCommand = lastGamesCommand;
         this.messageReceiverService = messageReceiverService;
+        this.addBankEventCommand = addBankEventCommand;
+        this.bankEventCommand = bankEventCommand;
+        this.clearBankEventCommand = clearBankEventCommand;
+        this.enableWebCamCommand = enableWebCamCommand;
+        this.getBankCoinsCommand = getBankCoinsCommand;
+        this.setBankEventCommand = setBankEventCommand;
+        this.setNameEventCommand = setNameEventCommand;
     }
 
     @SneakyThrows
@@ -185,11 +205,18 @@ public class MafiaBot {
                 this.changeWinClassicCommand,
                 this.cancelCityCommand,
                 this.cancelClassicCommand,
-                this.lastGamesCommand
+                this.lastGamesCommand,
+                this.addBankEventCommand,
+                this.bankEventCommand,
+                this.clearBankEventCommand,
+                this.enableWebCamCommand,
+                this.getBankCoinsCommand,
+                this.setBankEventCommand,
+                this.setNameEventCommand
                 );
 
-        discordClient.addEventListener(messageReceiverService, voiceReceiverService, buttonReceiverService, joinReceiverService,
-                commandClientBuilder.build());
+        discordClient.addEventListener(messageReceiverService, voiceReceiverService, buttonReceiverService,
+                joinReceiverService, commandClientBuilder.build());
 
         discordClient.awaitReady();
     }

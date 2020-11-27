@@ -9,11 +9,11 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.exceptions.HierarchyException;
 import org.springframework.stereotype.Service;
-import ru.devsett.bot.MafiaBot;
 import ru.devsett.bot.intefaces.NickNameEvent;
 import ru.devsett.bot.util.*;
 import ru.devsett.bot.util.Role;
 import ru.devsett.db.service.impl.ChannelService;
+import ru.devsett.db.service.impl.ConfigService;
 import ru.devsett.db.service.impl.MessageService;
 import ru.devsett.db.service.impl.UserService;
 
@@ -21,7 +21,6 @@ import java.awt.*;
 import java.security.SecureRandom;
 import java.util.*;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,11 +30,13 @@ public class DiscordService {
     private final MessageService messageService;
     private final UserService userService;
     private final ChannelService channelService;
+    private final ConfigService configService;
 
-    public DiscordService(MessageService messageService, UserService userService, ChannelService channelService) {
+    public DiscordService(MessageService messageService, UserService userService, ChannelService channelService, ConfigService configService) {
         this.messageService = messageService;
         this.userService = userService;
         this.channelService = channelService;
+        this.configService = configService;
     }
 
     public ActionDo addOrRemoveRole(MessageReceivedEvent event, Role role) {
@@ -377,7 +378,12 @@ public class DiscordService {
 
         for (Member channelMember : channel.getMembers()) {
             var retrivedMember = event.getGuild().retrieveMember(channelMember.getUser()).submit().get();
-            if (!retrivedMember.getEffectiveName().toLowerCase().startsWith("зр.") && !retrivedMember.getEffectiveName().startsWith("!")) {
+            var iffed = configService.isEnableWebCam()
+                    ? retrivedMember.getVoiceState() != null && !retrivedMember.getVoiceState().isGuildMuted()
+                    : !retrivedMember.getEffectiveName().toLowerCase().startsWith("зр.")
+                    && !retrivedMember.getEffectiveName().startsWith("!");
+
+            if (iffed) {
                 if (retrivedMember.getIdLong() != memberMsg.getIdLong()) {
                     membersOrdered.add(retrivedMember);
                 }
