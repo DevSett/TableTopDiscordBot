@@ -46,7 +46,6 @@ public class MessageReceiverService extends ListenerAdapter {
     @Override
     public void onMessageReceived(@NotNull MessageReceivedEvent event) {
         consume(event);
-        event.getMessage().delete().queue();
     }
 
     @Override
