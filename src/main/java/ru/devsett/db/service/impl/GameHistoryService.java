@@ -31,7 +31,9 @@ public class GameHistoryService {
         }
 
         return entityManager
-                .createQuery("select hh.id from GameHistoryEntity hh where hh.donPlayer = :player order by hh.id desc")
+                .createQuery("select hh.id from GameHistoryEntity hh where " +
+                        "hh.endGame = true and " +
+                        "hh.donPlayer = :player order by hh.id desc")
                 .setMaxResults(5)
                 .setParameter("player", userEntity)
                 .getResultList();
@@ -43,7 +45,9 @@ public class GameHistoryService {
         }
 
         return entityManager
-                .createQuery("select hh.id from GameHistoryEntity hh where hh.sheriffPlayer = :player order by hh.id desc")
+                .createQuery("select hh.id from GameHistoryEntity hh where " +
+                        "hh.endGame = true and " +
+                        "hh.sheriffPlayer = :player order by hh.id desc")
                 .setMaxResults(5)
                 .setParameter("player", userEntity)
                 .getResultList();
@@ -56,7 +60,8 @@ public class GameHistoryService {
 
         return entityManager
                 .createQuery("select hh.gameHistoryEntity.id from WhoPlayerHistoryEntity hh " +
-                        "where hh.player = :player and hh.redPlayer = true order by hh.gameHistoryEntity.id desc")
+                        "where hh.gameHistoryEntity.endGame = true and " +
+                        "hh.player = :player and hh.redPlayer = true order by hh.gameHistoryEntity.id desc")
                 .setMaxResults(5)
                 .setParameter("player", userEntity)
                 .getResultList();
@@ -69,7 +74,8 @@ public class GameHistoryService {
 
         return entityManager
                 .createQuery("select hh.gameHistoryEntity.id from WhoPlayerHistoryEntity hh " +
-                        "where hh.player = :player and hh.redPlayer = false order by hh.gameHistoryEntity.id desc")
+                        "where hh.gameHistoryEntity.endGame = true and " +
+                        " hh.player = :player and hh.redPlayer = false order by hh.gameHistoryEntity.id desc")
                 .setMaxResults(5)
                 .setParameter("player", userEntity)
                 .getResultList();

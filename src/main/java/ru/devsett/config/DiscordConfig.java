@@ -31,7 +31,7 @@ public class DiscordConfig {
     private String buildTimestamp;
 
     public String getBuildVersionHide() {
-        return "1.13";
+        return "1.13a";
     }
 
     @Bean
