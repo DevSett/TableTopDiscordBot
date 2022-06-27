@@ -150,6 +150,7 @@ public class MafiaService {
         messagePlayers.add("Игра №" + game.getId());
 
         for (Player player : players) {
+            discordService.sendPrivateMessage(Player, "Ваша роль: " + player.getMafiaRole().toString());
             messagePlayers.add(player.getNumber() + ". " + player.getUserEntity().getUserName() + " - " + player.getMafiaRole().toString());
         }
         discordService.sendPrivateMessageEmbed(event.getMember(), String.join("\n", messagePlayers));
